@@ -36,7 +36,7 @@ augroup END
 " *******************************
 
 " width of EAW
-"set ambiwidth=double
+set ambiwidth=double
 
 " audoindent
 set autoindent
