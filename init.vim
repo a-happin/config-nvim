@@ -213,7 +213,7 @@ set tabstop=8
 " >: <Right>
 " [: <Left> in insert mode
 " ]: <Right> in insert mode
-set whichwrap=b,s,<,>,[,]
+set whichwrap=b,s,<,[
 
 " charater which starts completion in command line
 set wildchar=<Tab>
