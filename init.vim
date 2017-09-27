@@ -36,7 +36,7 @@ augroup END
 " *******************************
 
 " width of EAW
-set ambiwidth=double
+"set ambiwidth=double
 
 " audoindent
 set autoindent
@@ -309,7 +309,7 @@ inoremap <expr>/ KamiSlash ()
 
 " 重複したスペースの入力ができなくなります
 " 入力したい場合は<C-v><Space>
-inoremap <expr><Space> BanDuplicateSpace ()
+"inoremap <expr><Space> BanDuplicateSpace ()
 
 " auto complete
 " 文字列化してexecuteしないとkeyがキーとして解釈されてしまう
@@ -419,15 +419,15 @@ function! KamiSlash ()
 endfunction
 
 " ban duplicate space
-function! BanDuplicateSpace ()
-  if PreCursorString () =~ ' $'
-    return ''
-  elseif CursorChar () ==# ' '
-    return "\<Right>"
-  else
-    return "\<Space>"
-  endif
-endfunction
+"function! BanDuplicateSpace ()
+"  if PreCursorString () =~ ' $'
+"    return ''
+"  elseif CursorChar () ==# ' '
+"    return "\<Right>"
+"  else
+"    return "\<Space>"
+"  endif
+"endfunction
 
 " '>'が自動挿入できるかどうか
 " htmlタグ用
