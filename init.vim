@@ -3,7 +3,7 @@ scriptencoding utf-8
 
 
 " *******************************
-" **  (v'-')っ
+" **  (v'-')っ First Initialize
 " *******************************
 
 " ファイル別のプラグインを有効化
@@ -272,6 +272,28 @@ nnoremap <S-Tab> <<
 " Shift-Yで行末までヤンク
 nnoremap Y y$
 
+" 選択モードで選択中の範囲を囲む
+" ()
+xnoremap <Plug>(surround)( "zc(<C-r><C-o>z)<Esc>
+xmap <Plug>(surround)) <Plug>(surround)(
+" {}
+xnoremap <Plug>(surround){ "zc{<C-r><C-o>z}<Esc>
+xmap <Plug>(surround)} <Plug>(surround){
+" []
+xnoremap <Plug>(surround)[ "zc[<C-r><C-o>z]<Esc>
+xmap <Plug>(surround)] <Plug>(surround)[
+" <>
+xnoremap <Plug>(surround)< "zc<<C-r><C-o>z><Esc>
+xmap <Plug>(surround)> <Plug>(surround)<
+" ""
+xnoremap <Plug>(surround)" "zc"<C-r><C-o>z"<Esc>
+" ''
+xnoremap <Plug>(surround)' "zc'<C-r><C-o>z'<Esc>
+" ``
+xnoremap <Plug>(surround)` "zc`<C-r><C-o>z`<Esc>
+
+xmap s <Plug>(surround)
+
 " ポップアップ補完メニューが表示されているときは次の候補を選択
 inoremap <expr><Tab> pumvisible () ? '<C-n>' : KamiTab ()
 
@@ -284,7 +306,9 @@ inoremap <expr><CR> pumvisible () ? '<C-y>' : KamiCR ()
 
 " 括弧の対応の補完
 inoremap <expr>( CursorChar () !~ '\k' ? '()<Left>' : '('
+"inoremap <expr>( LeftParenthesis ()
 inoremap <expr>) CursorChar () ==# ')' ? '<Right>' : ')'
+"inoremap <expr>) RightParenthesis (')')
 
 inoremap <expr>[ CursorChar () !~ '\k' ? '[]<Left>' : '['
 inoremap <expr>] CursorChar () ==# ']' ? '<Right>' : ']'
@@ -316,6 +340,13 @@ inoremap <expr>/ KamiSlash ()
 for key in split ("1234567890qwertyuiopasdfghjklzxcvbnmQWERTYUIOPASDFGHJKLZXCVBNM_",'\zs')
   execute "inoremap <expr>" . key . " AutoComplete ('" . key . "')"
 endfor
+
+"augroup insert-custom
+"  autocmd!
+"  autocmd InsertEnter * let b:last_cursor_moved = v:false
+"  autocmd CursorMovedI * let b:last_cursor_moved = v:true
+"  autocmd InsertCharPre * let b:last_cursor_moved = v:false
+"augroup END
 
 
 " *******************************
