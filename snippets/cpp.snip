@@ -1,0 +1,273 @@
+### include
+snippet     include<>
+abbr        #include <bits/stdc++.h>
+  #include <${1:bits/stdc++.h}>$0
+
+### include
+snippet     include""
+abbr        #include ""
+  #include "${1}"$0
+
+### おまじない
+snippet     using_namespace_std
+abbr        using namespace std;
+  using namespace std;$0
+
+### main
+snippet     main()
+abbr        main
+#options     head
+  #include <bits/stdc++.h>
+  
+  using namespace std;
+  
+  auto main () -> int
+  {
+    cin.tie (nullptr);
+    ios::sync_with_stdio (false);
+  
+    $0
+  }
+
+### if
+snippet     if()
+abbr        if
+  if (${1:#:/* condition */})$0
+
+### else if
+snippet     else-if()
+abbr        else if
+  else if (${1:#:/* condition */})$0
+
+### while
+snippet     while()
+abbr        while
+  while (${1:#:/* condition */})$0
+
+### do-while
+snippet     do-while();
+abbr        do-while
+  do
+  {
+    $0
+  } while (${1:#:/* condition */});
+
+### for loop
+snippet     for-loop
+abbr        for loop
+  for (${1:auto} ${2:i} = ${3:0}; $2 < ${4:n}; ++ $2)$0
+
+### for loop with iterator
+snippet     for-loop-iterator
+abbr        for loop with iterator
+  for (${1:auto} ${2:ite} = ${3:vec}.begin (); $2 != $3.end (); ++ $2)$0
+
+### range-based for
+snippet     range-based-for-loop
+abbr        range-based for loop
+#alias       for-range-based
+  for (auto && ${1:elem} : ${2:vec})$0
+
+snippet     for-range-based
+abbr        range-based for loop
+  for (auto && ${1:elem} : ${2:vec})$0
+
+### rep macro
+snippet     rep()
+abbr        rep
+  rep (${1:i}, ${2:n})$0
+
+### switch
+snippet     switch()
+abbr        switch
+  switch (${1:#:/* expression */})
+  {
+  $0
+  default:
+  }
+
+### case
+snippet     case:
+abbr        case
+options     indent
+  case ${1:#:/* integral constant */}:$0
+
+### goto
+snippet     goto-statement
+abbr        goto
+  goto ${1:label};$0
+
+### return
+snippet     return-statement
+abbr        return
+  return ${1:res};$0
+
+### try catch
+snippet     try-catch
+abbr        try catch
+  try
+  {
+    $0
+  }
+  catch (const ${1:exception} & ${2:e})
+  {
+    cerr << $2.what () << endl;
+  }
+
+### throw
+snippet     throw-statement
+abbr        throw
+  throw ${1:#:/* exception */};$0
+
+### sizeof
+snippet     sizeof()
+abbr        sizeof
+options     word
+  sizeof (${1:#:/* expression */})$0
+
+### decltype
+snippet     decltype()
+abbr        decltype
+options     word
+  decltype (${1:#:/* expression */})$0
+
+### noexcept
+snippet     noexcept()
+abbr        noexcept
+options     word
+  noexcept (${1:#:/* expression */})$0
+
+### static_cast
+snippet     static_cast<>()
+abbr        static_cast
+options     word
+  static_cast <${1:#:void}> (${2:#:/* expression */})$0
+
+### static_assert
+snippet     static_assert()
+abbr        static_assert
+  static_assert (${1:#:/* condition */});$0
+
+### namespace
+snippet     namespace{}
+abbr        namespace
+  namespace ${1:detail}
+  {
+    $0
+  } // namespace $1
+
+### template
+snippet     template<>
+abbr        template
+  template <$0>
+
+### typename
+snippet     typename-T
+abbr        typename
+options     word
+  typename ${1:T}$0
+
+### lambda
+snippet     lambda-expression
+abbr        lambda
+options     word
+  [&] (auto && ${1:x}) {
+    return $1;$0
+  }
+
+### function
+snippet     function
+abbr        function
+  inline ${2:constexpr }auto ${1:f} ()${3: noexcept}
+  {
+    $0
+  }
+
+### auto&&
+snippet     auto&&
+abbr        auto &&
+options     word
+  auto &&$0
+
+### structured binding
+snippet     structured-binding-declaration
+abbr        structured binding
+#alias       auto-structured-binding
+  auto && [${1:_}] = ${2:/* tuple or array */};$0
+
+snippet     auto-structured-binding
+abbr        structured binding
+  auto && [${1:_}] = ${2:/* tuple or array */};$0
+
+### iterator pair
+snippet     iterator-pair
+abbr        iterator pair
+#alias       ALL
+options     word
+  ${1:v}.begin (), $1.end ()$0
+
+snippet     ALL
+abbr        iterator pair
+options     word
+  ${1:v}.begin (), $1.end ()$0
+
+### iterator pair of istream
+snippet     istreambuf_iterator-pair
+abbr        iterator pair of istreambuf_iterator
+options     word
+  (istreambuf_iterator <char> (${1:cin})), istreambuf_iterator <char> ()$0
+
+### input with cin
+snippet     cin>>
+abbr        input with cin
+  cin >> ${1:n};$0
+
+### output with cout
+snippet     cout<<
+abbr        output with cout
+  cout << ${1:ans} << endl;$0
+
+### output bool with cout
+snippet     cout<<bool
+abbr        outout bool with cout
+  cout << (${1:ans} ? "${2:true}" : "${3:false}") << endl;$0
+
+### input with istream_iterator
+snippet     istream_iterator-input
+abbr        input with istream_iterator
+  copy_n (istream_iterator <decay_t <decltype ($1.front ())>> (cin), ${2:n}, back_inserter (${1:v}));$0
+
+### output with ostream_iterator
+snippet     ostream_iterator-output
+abbr        output with ostream_iterator
+  copy (${1:ans}.begin (), $1.end (), ostream_iterator <decay_t <decltype ($1.front ())>> (${2:cout}, " "));$0
+
+### unique
+snippet     unique()
+abbr        unique
+  ${1:v}.erase (unique ($1.begin (), $1.end ()), $1.end ());$0
+
+### define rep
+snippet     define-rep
+abbr        define rep
+  #define rep(i,n) for (decay_t <decltype (n)> i = 0, i ## __len = (n); i < i ## __len; ++ i)$0
+
+### define dump
+snippet     define-dump
+abbr        define dump
+  #define dump(x) cerr << #x " = " << boolalpha << (x) << endl;$0
+
+### include gurad
+snippet     include-gurad
+abbr        include-gurad
+  #ifndef ${1:#:/* macro */}
+  #define $1
+  $0
+  #endif // $1
+
+### local-only
+snippet     local-only
+abbr        #ifdef LOCAL
+  #ifdef LOCAL
+  $0
+  #endif
