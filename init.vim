@@ -1,6 +1,30 @@
 set encoding=utf-8
 scriptencoding utf-8
 
+" *******************************
+" **  dein.vim
+" *******************************
+
+set runtimepath+=~/.cache/dein/repos/github.com/Shougo/dein.vim
+
+if dein#load_state ('~/.cache/dein')
+  call dein#begin ('~/.cache/dein')
+
+  call dein#add ('~/.cache/dein/repos/github.com/Shougo/dein.vim')
+
+  call dein#add ('Shougo/deoplete.nvim')
+  call dein#add ('deoplete-plugins/deoplete-dictionary')
+  call dein#add ('Shougo/neosnippet.vim')
+"  call dein#add('Shougo/neosnippet-snippets')
+
+  call dein#end ()
+  call dein#save_state ()
+endif
+
+" auto install new plugin
+if dein#check_install ()
+  call dein#install ()
+endif
 
 " *******************************
 " **  (v'-')っ First Initialize
@@ -13,6 +37,17 @@ filetype plugin indent on
 " syntaxを有効化
 syntax on
 
+
+" *******************************
+" **  plugin settings
+" *******************************
+
+let g:deoplete#enable_at_startup = 1
+call deoplete#custom#source ('dictionary', 'matchers', ['matcher_head'])
+
+let g:neosnippet#snippets_directory = '~/.config/nvim/snippets'
+" which disables all runtime snippets
+let g:neosnippet#disable_runtime_snippets = { '_' : 1 }
 
 " *******************************
 " **  autocmd
@@ -61,7 +96,7 @@ set nobackup
 set cinoptions+=:0,g0,t0
 
 " 補完の種類
-set complete=.,w,b,u,t
+set complete=.,w,b,u,k,s,i,d,t
 
 " ユーザ定義補完関数
 "set completefunc=
@@ -71,7 +106,8 @@ set complete=.,w,b,u,t
 " preview: show extra information
 " noinsert: do not insert until select
 " noselect: do not select
-set completeopt=menuone,preview,noinsert
+"set completeopt=menuone,preview,noinsert
+set completeopt=menuone,preview,noselect
 
 " concealを有効にするモード
 " n: normal
@@ -166,7 +202,7 @@ set shiftwidth=2
 " display inputting command on lower right
 set showcmd
 
-" 括弧入力時に対応する括弧に一瞬ジャンプ
+" 括弧入力時に対応する括弧に一瞬ジャンプしない（うざい）
 set noshowmatch
 
 " 大文字で検索した時は大文字と小文字を区別する
@@ -294,15 +330,22 @@ xnoremap <Plug>(surround)` "zc`<C-r><C-o>z`<Esc>
 
 xmap s <Plug>(surround)
 
+" for neosnippet
+imap <C-k> <Plug>(neosnippet_expand_or_jump)
+smap <C-k> <Plug>(neosnippet_expand_or_jump)
+xmap <C-k> <Plug>(neosnippet_expand_target)
+
 " ポップアップ補完メニューが表示されているときは次の候補を選択
-inoremap <expr><Tab> pumvisible () ? '<C-n>' : KamiTab ()
+imap <expr><Tab> pumvisible () ? '<C-n>' : neosnippet#expandable_or_jumpable () ? '<Plug>(neosnippet_expand_or_jump)' : TabKey ()
+smap <expr><Tab> neosnippet#expandable_or_jumpable () ? '<Plug>(neosnippet_expand_or_jump)' : '<Tab>'
 
 " ポップアップ補完メニューが表示されているときは前の候補を選択
 " それ以外はインデントを1つ下げる
 inoremap <expr><S-Tab> pumvisible () ? '<C-p>' : '<C-d>'
 
 " ポップアップ補完メニューが表示されているときは確定
-inoremap <expr><CR> pumvisible () ? '<C-y>' : KamiCR ()
+"inoremap <expr><CR> pumvisible () ? '<C-y>' : KamiCR ()
+imap <expr><CR> pumvisible () ? neosnippet#expandable () ? '<Plug>(neosnippet_expand)' : '<C-y>' : CRKey ()
 
 " 括弧の対応の補完
 inoremap <expr>( CursorChar () !~ '\k' ? '()<Left>' : '('
@@ -337,9 +380,9 @@ inoremap <expr>/ KamiSlash ()
 
 " auto complete
 " 文字列化してexecuteしないとkeyがキーとして解釈されてしまう
-for key in split ("1234567890qwertyuiopasdfghjklzxcvbnmQWERTYUIOPASDFGHJKLZXCVBNM_",'\zs')
-  execute "inoremap <expr>" . key . " AutoComplete ('" . key . "')"
-endfor
+"for key in split ("1234567890qwertyuiopasdfghjklzxcvbnmQWERTYUIOPASDFGHJKLZXCVBNM_",'\zs')
+"  execute "inoremap <expr>" . key . " AutoComplete ('" . key . "')"
+"endfor
 
 "augroup insert-custom
 "  autocmd!
@@ -388,7 +431,7 @@ endfunction
 " キーワードなら補完開始
 " スラッシュならファイル名補完開始
 " それ以外はTab
-function! KamiTab ()
+function! TabKey ()
   let l:pre = PreCursorString ()
   if l:pre =~ '\k$'
     return "\<C-n>"
@@ -400,7 +443,7 @@ function! KamiTab ()
 endfunction
 
 " 神CR
-function! KamiCR ()
+function! CRKey ()
   let l:pre = PreCursorString ()
   let l:cur = CursorChar ()
   if l:pre =~ '{$' && l:cur ==# '}'
