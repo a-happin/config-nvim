@@ -65,6 +65,11 @@ augroup auto-reload-vimrc
   autocmd BufWritePost *init.vim source ${MYVIMRC}
 augroup END
 
+augroup dictionary
+  autocmd!
+  autocmd FileType cpp setlocal dictionary+=~/.config/nvim/dictionary/cpp.dict
+augroup END
+
 
 " *******************************
 " **  set
