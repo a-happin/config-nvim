@@ -307,6 +307,10 @@ nnoremap ZQ <Nop>
 nnoremap <MiddleMouse> <Nop>
 vnoremap <MiddleMouse> <Nop>
 
+" Ctrl-Cによる挿入モードからの離脱を禁止
+" （InsertLeaveが呼ばれないので内部状態がおかしくなる）
+inoremap <C-c> <Nop>
+
 " Shift-Tabでインデントを1つ減らす
 nnoremap <S-Tab> <<
 
