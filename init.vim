@@ -10,12 +10,23 @@ set runtimepath+=~/.cache/dein/repos/github.com/Shougo/dein.vim
 if dein#load_state ('~/.cache/dein')
   call dein#begin ('~/.cache/dein')
 
+  " requires
   call dein#add ('~/.cache/dein/repos/github.com/Shougo/dein.vim')
 
+  " completion
   call dein#add ('Shougo/deoplete.nvim')
+
+  " make deoplete use dictionary
   call dein#add ('deoplete-plugins/deoplete-dictionary')
+
+  " snippets
   call dein#add ('Shougo/neosnippet.vim')
-"  call dein#add('Shougo/neosnippet-snippets')
+
+  " default snippets
+  "call dein#add('Shougo/neosnippet-snippets')
+
+  " 色コードを色で表示
+  call dein#add ('gorodinskiy/vim-coloresque')
 
   call dein#end ()
   call dein#save_state ()
@@ -68,6 +79,13 @@ augroup END
 augroup dictionary
   autocmd!
   autocmd FileType cpp setlocal dictionary+=~/.config/nvim/dictionary/cpp.dict
+augroup END
+
+augroup cpp-syntax-fix
+autocmd!
+autocmd FileType cpp syntax match cppOperatorSymbols /\v[-+*~&!?:%=<>^|\[\]]|\zs\/\ze[^/*]/
+autocmd FileType cpp highlight link cppOperatorSymbols Operator
+autocmd FileType cpp highlight link cppCast Operator
 augroup END
 
 
@@ -310,6 +328,12 @@ vnoremap <MiddleMouse> <Nop>
 " Ctrl-Cによる挿入モードからの離脱を禁止
 " （InsertLeaveが呼ばれないので内部状態がおかしくなる）
 inoremap <C-c> <Nop>
+
+" ビジュアルモードでCtrl-Aで全選択
+vnoremap <C-a> ggoG
+
+" 選択中にCtrl-Cでクリップボードにコピー
+vnoremap <C-c> "+y
 
 " Shift-Tabでインデントを1つ減らす
 nnoremap <S-Tab> <<
