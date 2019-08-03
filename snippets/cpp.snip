@@ -57,6 +57,11 @@ snippet     for-loop
 abbr        for loop
   for (${1:auto} ${2:i} = ${3:0}; $2 < ${4:n}; ++ $2)$0
 
+### for loop
+snippet     for-loop-1-indexed
+abbr        for loop 1-indexed
+  for (${1:auto} ${2:i} = ${3:1}; $2 <= ${4:n}; ++ $2)$0
+
 ### for loop with iterator
 snippet     for-loop-iterator
 abbr        for loop with iterator
@@ -227,6 +232,11 @@ snippet     cout<<
 abbr        output with cout
   cout << ${1:ans} << endl;$0
 
+### output double with cout
+snippet     cout<<double
+abbr        output double with cout
+  cout << fixed << setprecision (15) << ${1:ans} << endl;$0
+
 ### output bool with cout
 snippet     cout<<bool
 abbr        outout bool with cout
@@ -240,7 +250,8 @@ abbr        input with istream_iterator
 ### output with ostream_iterator
 snippet     ostream_iterator-output
 abbr        output with ostream_iterator
-  copy (${1:ans}.begin (), $1.end (), ostream_iterator <decay_t <decltype ($1.front ())>> (${2:cout}, " "));$0
+  copy (${1:ans}.begin (), $1.end (), ostream_iterator <decay_t <decltype ($1.front ())>> (${2:cout}, " "));
+  cout << endl;$0
 
 ### unique
 snippet     unique()
@@ -265,9 +276,20 @@ abbr        include-gurad
   $0
   #endif // $1
 
-### local-only
-snippet     local-only
-abbr        #ifdef LOCAL
-  #ifdef LOCAL
+### #ifdef ~ #endif
+snippet     ifdef-endif
+abbr        #ifdef ~ #endif
+  #ifdef ${1:DEBUG}
   $0
   #endif
+
+### define operator << (ostream &, const T &)
+snippet     operator<<ostream
+abbr        define operator << (ostream)
+  ${1:template <typename T>}
+  inline auto operator << (ostream & stream, const ${2:vector <T>} & x) -> ostream &
+  {
+    ${3:copy (x.begin (), x.end (), ostream_iterator <T> (stream, " "));}
+    return stream;$0
+  }
+

@@ -98,4 +98,3 @@ if &background ==# 'dark'
   highlight Todo ctermfg=16 ctermbg=229 cterm=none
 endif
 
-
