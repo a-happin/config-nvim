@@ -392,7 +392,7 @@ inoremap <expr>] CursorChar () ==# ']' ? '<Right>' : ']'
 inoremap <expr>{ CursorChar () !~ '\k' ? '{}<Left>' : '{'
 inoremap <expr>} CursorChar () ==# '}' ? '<Right>' : '}'
 
-inoremap <expr>> CursorChar () ==# '>' ? '<Right>' : '>'
+"inoremap <expr>> CursorChar () ==# '>' ? '<Right>' : '>'
 
 inoremap <expr>" CursorChar () ==# '"' ? '<Right>' : CursorChar () !~ '\k' && PreCursorString () =~ '[ ([{,]$' ? '""<Left>' : '"'
 

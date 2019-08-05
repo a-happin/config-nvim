@@ -9,7 +9,7 @@ abbr        #include ""
   #include "${1}"$0
 
 ### おまじない
-snippet     using_namespace_std
+snippet     using-namespace-std
 abbr        using namespace std;
   using namespace std;$0
 
@@ -18,7 +18,6 @@ snippet     main()
 abbr        main
 #options     head
   #include <bits/stdc++.h>
-  
   using namespace std;
   
   auto main () -> int
@@ -57,15 +56,20 @@ snippet     for-loop
 abbr        for loop
   for (${1:auto} ${2:i} = ${3:0}; $2 < ${4:n}; ++ $2)$0
 
-### for loop
+### for loop 1-indexed
 snippet     for-loop-1-indexed
 abbr        for loop 1-indexed
   for (${1:auto} ${2:i} = ${3:1}; $2 <= ${4:n}; ++ $2)$0
 
+### for loop 1-indexed reverse
+snippet     for-loop-1-indexed-reverse
+abbr        for loop 1-indexed reverse
+  for (${1:auto} ${2:i} = ${3:n}; $2 > ${4:0}; -- $2)$0
+
 ### for loop with iterator
 snippet     for-loop-iterator
 abbr        for loop with iterator
-  for (${1:auto} ${2:ite} = ${3:vec}.begin (); $2 != $3.end (); ++ $2)$0
+  for (${1:auto} ${2:ite} = begin (${3:vec}); $2 != end ($3); ++ $2)$0
 
 ### range-based for
 snippet     range-based-for-loop
@@ -76,11 +80,6 @@ abbr        range-based for loop
 snippet     for-range-based
 abbr        range-based for loop
   for (auto && ${1:elem} : ${2:vec})$0
-
-### rep macro
-snippet     rep()
-abbr        rep
-  rep (${1:i}, ${2:n})$0
 
 ### switch
 snippet     switch()
@@ -206,18 +205,13 @@ abbr        structured binding
 
 ### iterator pair
 snippet     iterator-pair
-abbr        iterator pair
+abbr        begin (), end ()
 #alias       ALL
 options     word
-  ${1:v}.begin (), $1.end ()$0
-
-snippet     ALL
-abbr        iterator pair
-options     word
-  ${1:v}.begin (), $1.end ()$0
+  begin (${1:v}), end ($1)$0
 
 ### iterator pair of istream
-snippet     istreambuf_iterator-pair
+snippet     istreambuf_iterator<char>-pair
 abbr        iterator pair of istreambuf_iterator
 options     word
   (istreambuf_iterator <char> (${1:cin})), istreambuf_iterator <char> ()$0
@@ -228,7 +222,7 @@ abbr        input with cin
   cin >> ${1:n};$0
 
 ### output with cout
-snippet     cout<<
+snippet     cout<<T
 abbr        output with cout
   cout << ${1:ans} << endl;$0
 
@@ -243,25 +237,40 @@ abbr        outout bool with cout
   cout << (${1:ans} ? "${2:true}" : "${3:false}") << endl;$0
 
 ### input with istream_iterator
-snippet     istream_iterator-input
+snippet     input-with-istream_iterator
 abbr        input with istream_iterator
-  copy_n (istream_iterator <decay_t <decltype ($1.front ())>> (cin), ${2:n}, back_inserter (${1:v}));$0
+  copy_n (istream_iterator <iterator_traits <decltype (begin ($1))>::value_type> (cin), ${2:n}, back_inserter (${1:v}));$0
 
 ### output with ostream_iterator
-snippet     ostream_iterator-output
+snippet     output-with-ostream_iterator
 abbr        output with ostream_iterator
-  copy (${1:ans}.begin (), $1.end (), ostream_iterator <decay_t <decltype ($1.front ())>> (${2:cout}, " "));
-  cout << endl;$0
+  copy (begin (${1:ans}), end ($1), ostream_iterator <iterator_traits <decltype (begin ($1))>::value_type> (${2:cout}, " "));
+  $2 << endl;$0
 
 ### unique
 snippet     unique()
 abbr        unique
   ${1:v}.erase (unique ($1.begin (), $1.end ()), $1.end ());$0
 
+### sum
+snippet     sum()
+abbr        sum of
+  accumulate (begin (${1:v}), end ($1), typename iterator_traits <decltype (begin ($1))>::value_type {});$0
+
 ### define rep
 snippet     define-rep
 abbr        define rep
   #define rep(i,n) for (decay_t <decltype (n)> i = 0, i ## __len = (n); i < i ## __len; ++ i)$0
+
+### define rep
+snippet     define-repr
+abbr        define repr [reverse]
+  #define repr(i,n) for (auto i = (n); i --;)$0
+
+### define ALL
+snippet     define-ALL
+abbr        define ALL
+  #define ALL(x) begin (x), end (x)$0
 
 ### define dump
 snippet     define-dump
@@ -279,7 +288,7 @@ abbr        include-gurad
 ### #ifdef ~ #endif
 snippet     ifdef-endif
 abbr        #ifdef ~ #endif
-  #ifdef ${1:DEBUG}
+  #ifdef ${1:LOCAL}
   $0
   #endif
 
@@ -289,7 +298,7 @@ abbr        define operator << (ostream)
   ${1:template <typename T>}
   inline auto operator << (ostream & stream, const ${2:vector <T>} & x) -> ostream &
   {
-    ${3:copy (x.begin (), x.end (), ostream_iterator <T> (stream, " "));}
+    ${3:copy (begin (x), end (x), ostream_iterator <T> (stream, " "));}
     return stream;$0
   }
 
