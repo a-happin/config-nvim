@@ -75,11 +75,11 @@ abbr        for loop with iterator
 snippet     range-based-for-loop
 abbr        range-based for loop
 #alias       for-range-based
-  for (auto && ${1:elem} : ${2:vec})$0
+  for (auto && ${1:elem} : ${2:v})$0
 
 snippet     for-range-based
 abbr        range-based for loop
-  for (auto && ${1:elem} : ${2:vec})$0
+  for (auto && ${1:elem} : ${2:v})$0
 
 ### switch
 snippet     switch()
@@ -145,7 +145,7 @@ options     word
 snippet     static_cast<>()
 abbr        static_cast
 options     word
-  static_cast <${1:void}> (${2:#:/* expression */})$0
+  static_cast <${1:#:/* type */}> (${2:#:/* expression */})$0
 
 ### static_assert
 snippet     static_assert()
@@ -257,15 +257,30 @@ snippet     sum()
 abbr        sum of
   accumulate (begin (${1:v}), end ($1), typename iterator_traits <decltype (begin ($1))>::value_type {});$0
 
+### define FOR
+snippet     define-FOR
+abbr        define FOR
+  #define FOR(i,b,e) for (common_type_t <decltype (b), decltype (e)> i = (b), i ## __end = (e); i != i ## __end; ++ i)$0
+
 ### define rep
 snippet     define-rep
 abbr        define rep
   #define rep(i,n) for (decay_t <decltype (n)> i = 0, i ## __len = (n); i < i ## __len; ++ i)$0
 
-### define rep
+### define rep1 1-indexed
+snippet     define-rep1
+abbr        define rep1 [1-indexed]
+  #define rep1(i,n) for (decay_t <decltype (n)> i = 1, i ## __len = (n); i <= i ## __len; ++ i)$0
+
+### define repr
 snippet     define-repr
 abbr        define repr [reverse]
   #define repr(i,n) for (auto i = (n); i --;)$0
+
+### define repr 1-indexed
+snippet     define-rep1r
+abbr        define rep1 [1-indexed] [reverse]
+  #define rep1r(i,n) for (auto i = (n); i > 0; -- i)$0
 
 ### define ALL
 snippet     define-ALL
@@ -276,6 +291,17 @@ abbr        define ALL
 snippet     define-dump
 abbr        define dump
   #define dump(x) cerr << #x " = " << boolalpha << (x) << endl;$0
+
+### define inf
+snippet     define-inf
+abbr        define inf [constexpr]
+  template <typename T>
+  static constexpr auto inf = static_cast <T> (sizeof (T) < 8 ? 1e9 : 1e18);$0
+
+### define EPS
+snippet     define-EPS
+abbr        define EPS [constexpr]
+  static constexpr auto EPS = 1e-9;$0
 
 ### include gurad
 snippet     include-gurad
