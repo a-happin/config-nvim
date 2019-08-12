@@ -8,16 +8,15 @@ snippet     include""
 abbr        #include ""
   #include "${1}"$0
 
-### おまじない
-snippet     using-namespace-std
-abbr        using namespace std;
-  using namespace std;$0
-
 ### main
 snippet     main()
 abbr        main
 #options     head
   #include <bits/stdc++.h>
+  #define FOR(i,b,e) for (common_type_t <decltype (b), decltype (e)> i = (b), i ## __end = (e); i < i ## __end; ++ i)
+  #define FORR(i,b,e) for (common_type_t <decltype (b), decltype (e)> i = (e), i ## __begin = (b); i -- > i ## __begin;)
+  #define rep(i,n) for (decay_t <decltype (n)> i = 0, i ## __len = (n); i < i ## __len; ++ i)
+  #define ALL(x) begin (x), end (x)
   using namespace std;
   
   auto main () -> int
@@ -55,16 +54,6 @@ abbr        do-while
 snippet     for-loop
 abbr        for loop
   for (${1:auto} ${2:i} = ${3:0}; $2 < ${4:n}; ++ $2)$0
-
-### for loop 1-indexed
-snippet     for-loop-1-indexed
-abbr        for loop 1-indexed
-  for (${1:auto} ${2:i} = ${3:1}; $2 <= ${4:n}; ++ $2)$0
-
-### for loop 1-indexed reverse
-snippet     for-loop-1-indexed-reverse
-abbr        for loop 1-indexed reverse
-  for (${1:auto} ${2:i} = ${3:n}; $2 > ${4:0}; -- $2)$0
 
 ### for loop with iterator
 snippet     for-loop-iterator
@@ -129,6 +118,12 @@ abbr        sizeof
 options     word
   sizeof (${1:#:/* expression */})$0
 
+### alignof
+snippet     alignof()
+abbr        alignof
+options     word
+  alignof (${1:#:/* expression */})$0
+
 ### decltype
 snippet     decltype()
 abbr        decltype
@@ -165,12 +160,6 @@ snippet     template<>
 abbr        template
   template <$0>
 
-### typename
-snippet     typename-T
-abbr        typename
-options     word
-  typename ${1:T}$0
-
 ### lambda
 snippet     lambda-expression
 abbr        lambda
@@ -178,6 +167,14 @@ options     word
   [&] (auto && ${1:x}) {
     return $1;$0
   }
+
+### lambda recursive
+snippet     lambda-expression-recursive
+abbr        lambda-recursive
+options     word
+  auto ${1:f} = [&] (auto self, auto && ${2:x}) {
+    return self (self, $2);
+  };
 
 ### function
 snippet     function
@@ -210,6 +207,12 @@ abbr        begin (), end ()
 options     word
   begin (${1:v}), end ($1)$0
 
+### iterator pair
+snippet     ALL()
+abbr        begin (), end ()
+options     word
+  begin (${1:v}), end ($1)$0
+
 ### iterator pair of istream
 snippet     istreambuf_iterator<char>-pair
 abbr        iterator pair of istreambuf_iterator
@@ -219,7 +222,13 @@ options     word
 ### input with cin
 snippet     cin>>
 abbr        input with cin
-  cin >> ${1:n};$0
+  ${1:size_t} ${2:n}; cin >> $2;$0
+
+### input vector
+snippet     input-vector
+abbr        input vector
+  vector <${1:int64_t}> ${2:v} (${3:n});
+  for (auto && elem : $2) cin >> elem;$0
 
 ### output with cout
 snippet     cout<<T
@@ -260,27 +269,12 @@ abbr        sum of
 ### define FOR
 snippet     define-FOR
 abbr        define FOR
-  #define FOR(i,b,e) for (common_type_t <decltype (b), decltype (e)> i = (b), i ## __end = (e); i != i ## __end; ++ i)$0
+  #define FOR(i,b,e) for (common_type_t <decltype (b), decltype (e)> i = (b), i ## __end = (e); i < i ## __end; ++ i)$0
 
 ### define rep
 snippet     define-rep
 abbr        define rep
   #define rep(i,n) for (decay_t <decltype (n)> i = 0, i ## __len = (n); i < i ## __len; ++ i)$0
-
-### define rep1 1-indexed
-snippet     define-rep1
-abbr        define rep1 [1-indexed]
-  #define rep1(i,n) for (decay_t <decltype (n)> i = 1, i ## __len = (n); i <= i ## __len; ++ i)$0
-
-### define repr
-snippet     define-repr
-abbr        define repr [reverse]
-  #define repr(i,n) for (auto i = (n); i --;)$0
-
-### define repr 1-indexed
-snippet     define-rep1r
-abbr        define rep1 [1-indexed] [reverse]
-  #define rep1r(i,n) for (auto i = (n); i > 0; -- i)$0
 
 ### define ALL
 snippet     define-ALL
@@ -295,17 +289,17 @@ abbr        define dump
 ### define inf
 snippet     define-inf
 abbr        define inf [constexpr]
-  template <typename T>
-  static constexpr auto inf = static_cast <T> (sizeof (T) < 8 ? 1e9 : 1e18);$0
+  template <typename T = int64_t>
+  static constexpr auto inf = static_cast <T> (0x0de0b6b43b9aca00);$0
 
 ### define EPS
 snippet     define-EPS
 abbr        define EPS [constexpr]
   static constexpr auto EPS = 1e-9;$0
 
-### include gurad
-snippet     include-gurad
-abbr        include-gurad
+### include guard
+snippet     include-guard
+abbr        include-guard
   #ifndef ${1:#:/* macro */}
   #define $1
   $0
@@ -324,7 +318,7 @@ abbr        define operator << (ostream)
   ${1:template <typename T>}
   inline auto operator << (ostream & stream, const ${2:vector <T>} & x) -> ostream &
   {
-    ${3:copy (begin (x), end (x), ostream_iterator <T> (stream, " "));}
-    return stream;$0
+    ostream_join (begin (x), end (x), stream, " ");$0
+    return stream;
   }
 
