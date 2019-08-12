@@ -55,6 +55,8 @@ syntax on
 
 let g:deoplete#enable_at_startup = 1
 call deoplete#custom#source ('dictionary', 'matchers', ['matcher_head'])
+call deoplete#custom#source ('dictionary', 'rank', 999)
+call deoplete#custom#source ('_', 'sorters', ['sorter_rank', 'sorter_word'])
 
 let g:neosnippet#snippets_directory = '~/.config/nvim/snippets'
 " which disables all runtime snippets
