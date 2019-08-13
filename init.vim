@@ -413,6 +413,12 @@ inoremap <expr>/ KamiSlash ()
 " 入力したい場合は<C-v><Space>
 "inoremap <expr><Space> BanDuplicateSpace ()
 
+
+" インデントを考慮した<Home>
+nnoremap <expr>0 PreCursorString () =~ '^\s*$' ? '0' : '^'
+nnoremap <expr><Home> PreCursorString () =~ '^\s*$' ? '<Home>' : '^'
+inoremap <expr><Home> PreCursorString () =~ '^\s*$' ? '<Home>' : '<C-o>^'
+
 " auto complete
 " 文字列化してexecuteしないとkeyがキーとして解釈されてしまう
 "for key in split ("1234567890qwertyuiopasdfghjklzxcvbnmQWERTYUIOPASDFGHJKLZXCVBNM_",'\zs')
