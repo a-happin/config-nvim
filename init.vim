@@ -25,6 +25,9 @@ if dein#load_state ('~/.cache/dein')
   " default snippets
   "call dein#add('Shougo/neosnippet-snippets')
 
+  " asynchronous lint engine
+  call dein#add ('w0rp/ale')
+
   " 色コードを色で表示
   call dein#add ('gorodinskiy/vim-coloresque')
 
@@ -62,6 +65,10 @@ let g:neosnippet#snippets_directory = '~/.config/nvim/snippets'
 " which disables all runtime snippets
 let g:neosnippet#disable_runtime_snippets = { '_' : 1 }
 
+let g:ale_linters = {'cpp': ['clang']}
+let g:ale_cpp_clang_options = "-std=c++14 -Weverything -Wno-c++98-compat-pedantic -Wno-c11-extensions -Wno-unused-macros -pedantic-errors"
+
+
 " *******************************
 " **  autocmd
 " *******************************
@@ -84,10 +91,16 @@ augroup dictionary
 augroup END
 
 augroup cpp-syntax-fix
-autocmd!
-autocmd FileType cpp syntax match cppOperatorSymbols /\v[-+*~&!?:%=<>^|\[\]]|\zs\/\ze[^/*]/
-autocmd FileType cpp highlight link cppOperatorSymbols Operator
-autocmd FileType cpp highlight link cppCast Operator
+  autocmd!
+  autocmd FileType cpp syntax match cppOperatorSymbols /\v[-+*~&!?:%=<>^|\[\]]|\zs\/\ze[^/*]/
+  autocmd FileType cpp highlight link cppOperatorSymbols Operator
+  autocmd FileType cpp highlight link cppCast Operator
+augroup END
+
+augroup auto-save
+  autocmd!
+  autocmd! CursorHold * silent call <SID>AutoSaveIfPossible ()
+  autocmd! InsertLeave * silent call <SID>AutoSaveIfPossible ()
 augroup END
 
 
@@ -266,6 +279,9 @@ set noswapfile
 
 " tab width
 set tabstop=8
+
+" CursorHoldの発動ラグ
+set updatetime=1000
 
 " 移動キーなどで行をまたいで移動する
 " b: <BS>
@@ -548,5 +564,12 @@ endfunction
 " htmlタグ用
 function! IsRightAngleBracketInsertable (pre,cur)
   return a:pre =~ '<$' && a:cur !~ '\k' && a:cur !=# '>'
+endfunction
+
+" 自動保存
+function! s:AutoSaveIfPossible ()
+  if &modified && &filetype != 'gitcommit' && filewritable (expand ('%'))
+    write
+  endif
 endfunction
 
