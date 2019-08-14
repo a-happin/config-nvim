@@ -99,8 +99,12 @@ augroup END
 
 augroup auto-save
   autocmd!
-  autocmd! CursorHold * silent call <SID>AutoSaveIfPossible ()
-  autocmd! InsertLeave * silent call <SID>AutoSaveIfPossible ()
+  autocmd CursorHold,InsertLeave * silent call <SID>AutoSaveIfPossible ()
+augroup END
+
+augroup file-reload
+  autocmd!
+  autocmd InsertEnter,WinEnter * checktime
 augroup END
 
 
