@@ -12,7 +12,7 @@ syn keyword cppStatement	new delete this friend using
 syn keyword cppAccess		public protected private
 syn keyword cppModifier		inline virtual explicit export
 syn keyword cppType		bool wchar_t
-syn keyword cppUserDefinedType	array vector list forward_list pair tuple set map multiset multimap unordered_set unordered_map unordered_multiset unordered_multimap deque stack queue priority_queue initializer_list optional variant any string string_view ll Iterator
+syn keyword cppUserDefinedType	string string_view Iterator
 syn match cppUserDefinedType	/\v<\k*_t>/
 syn keyword cppExceptions	throw try catch
 syn keyword cppOperator		operator typeid
