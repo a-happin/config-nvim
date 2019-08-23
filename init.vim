@@ -66,7 +66,7 @@ let g:neosnippet#snippets_directory = '~/.config/nvim/snippets'
 let g:neosnippet#disable_runtime_snippets = { '_' : 1 }
 
 let g:ale_linters = {'cpp': ['clang']}
-let g:ale_cpp_clang_options = "-std=c++14 -Weverything -Wno-c++98-compat-pedantic -Wno-c11-extensions -Wno-unused-macros -pedantic-errors"
+let g:ale_cpp_clang_options = "-std=c++14 -Weverything -Wno-c++98-compat-pedantic -Wno-c11-extensions -Wno-unused-macros -Wno-unused-const-variable -pedantic-errors"
 
 
 " *******************************
@@ -88,13 +88,6 @@ augroup END
 augroup dictionary
   autocmd!
   autocmd FileType cpp setlocal dictionary+=~/.config/nvim/dictionary/cpp.dict
-augroup END
-
-augroup cpp-syntax-fix
-  autocmd!
-  autocmd FileType cpp syntax match cppOperatorSymbols /\v[-+*~&!?:%=<>^|\[\]]|\zs\/\ze[^/*]/
-  autocmd FileType cpp highlight link cppOperatorSymbols Operator
-  autocmd FileType cpp highlight link cppCast Operator
 augroup END
 
 augroup auto-save

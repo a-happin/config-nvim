@@ -14,11 +14,12 @@ abbr        main
 #options     head
   #include <bits/stdc++.h>
   #define rep(i,n)    for (decay_t <decltype (n)> i = 0, i ## __len = (n); i < i ## __len; ++ i)
-  #define _for(i,b,e) for (common_type_t <decltype (b), decltype (e)> i = (b), i ## __end = (e); i < i ## __end; ++ i)
+  #define FOR(i,b,e)  for (common_type_t <decltype (b), decltype (e)> i = (b), i ## __end = (e); i < i ## __end; ++ i)
   #define FORR(i,b,e) for (common_type_t <decltype (b), decltype (e)> i = (e), i ## __begin = (b); i -- > i ## __begin;)
   #define ALL(x)      begin (x), end (x)
-  #define FOR(...)    _for (__VA_ARGS__)
   using namespace std;
+  using ll = int64_t;
+  constexpr ll inf = 0x0de0b6b43b9aca00;
   
   auto main () -> int
   {
@@ -294,6 +295,11 @@ snippet     define-ALL
 abbr        define ALL
   #define ALL(x) begin (x), end (x)$0
 
+### define FOR_WITH_INDEX
+snippet     define-FOR_WITH_INDEX
+abbr        define FOR_WITH_INDEX
+  #define FOR_WITH_INDEX(i,ite,b,e) for (size_t i = 0; i == 0; i |= 1) for (auto ite = (b), ite ## __end = (e); ite != ite ## __end; static_cast <void> (++ ite), ++ i)
+
 ### define dump
 snippet     define-dump
 abbr        define dump
@@ -304,6 +310,11 @@ snippet     define-inf
 abbr        define inf [constexpr]
   template <typename T = int64_t>
   static constexpr auto inf = static_cast <T> (0x0de0b6b43b9aca00);$0
+
+### inf value
+snippet     inf-value
+abbr        inf-value [constexpr]
+  0x0de0b6b43b9aca00$0
 
 ### define EPS
 snippet     define-EPS
