@@ -214,6 +214,18 @@ abbr        begin (), end ()
 options     word
   begin (${1:v}), end ($1)$0
 
+### iterator pair
+snippet     TAIL()
+abbr        next (begin ()), end ()
+options     word
+  next (begin (${1:v})), end ($1)$0
+
+### iterator pair
+snippet     NOLAST()
+abbr        begin (), prev (end ())
+options     word
+  begin (${1:v}), prev (end ($1))$0
+
 ### iterator pair of istream
 snippet     istreambuf_iterator<char>-pair
 abbr        iterator pair of istreambuf_iterator
