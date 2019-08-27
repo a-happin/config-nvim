@@ -12,7 +12,7 @@ syn keyword cppStatement	new delete this friend using
 syn keyword cppAccess		public protected private
 syn keyword cppModifier		inline virtual explicit export
 syn keyword cppType		bool wchar_t
-syn keyword cppUserDefinedType	string string_view Iterator
+syn keyword cppUserDefinedType	string string_view Iterator ll
 syn match cppUserDefinedType	/\v<\k*_t>/
 syn keyword cppExceptions	throw try catch
 syn keyword cppOperator		operator typeid
@@ -39,6 +39,7 @@ if !exists("cpp_no_cpp11")
   syn keyword cppConstant	ATOMIC_INT_LOCK_FREE ATOMIC_LONG_LOCK_FREE
   syn keyword cppConstant	ATOMIC_LLONG_LOCK_FREE ATOMIC_POINTER_LOCK_FREE
   syn region cppRawString	matchgroup=cppRawStringDelimiter start=+\%(u8\|[uLU]\)\=R"\z([[:alnum:]_{}[\]#<>%:;.?*\+\-/\^&|~!=,"']\{,16}\)(+ end=+)\z1"+ contains=@Spell
+  syn match cppUserLiteral	display /\v<\d+_\k+>/
 endif
 
 " C++ 14 extensions
@@ -70,6 +71,7 @@ hi def link cppConstant		Constant
 hi def link cppRawStringDelimiter	Delimiter
 hi def link cppRawString		String
 hi def link cppNumber		Number
+hi def link cppUserLiteral	Number
 
 let b:current_syntax = "cpp"
 

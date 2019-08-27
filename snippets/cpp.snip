@@ -13,11 +13,12 @@ snippet     main()
 abbr        main
 #options     head
   #include <bits/stdc++.h>
-  #define rep(i,n)   for (decay_t <decltype (n)> i = 0, i ## __len = (n); i < i ## __len; ++ i)
   #define FOR(i,b,e) for (common_type_t <decltype (b), decltype (e)> i = (b), i ## __end = (e); i < i ## __end; ++ i)
+  #define rep(i,n)   FOR (i, size_t {}, n)
   #define ALL(x)     begin (x), end (x)
   using namespace std;
-  constexpr int64_t inf = 0xde0b6b43b9aca00;
+  using ll = int64_t;
+  constexpr ll inf = 0xde0b6b43b9aca00;
   
   auto main () -> int
   {
@@ -54,6 +55,11 @@ abbr        do-while
 snippet     for-loop
 abbr        for loop
   for (${1:auto} ${2:i} = ${3:0}; $2 < ${4:n}; ++ $2)$0
+
+### for loop reverse
+snippet     for-loop-reverse
+abbr        for loop [reverse]
+  for (${1:auto} ${2:i} = ${3:n}; $2 -- > ${4:0};)$0
 
 ### for loop with iterator
 snippet     for-loop-iterator
@@ -164,17 +170,17 @@ abbr        template
 snippet     lambda-expression
 abbr        lambda
 options     word
-  [&] (auto && ${1:x}) {
-    return $1;$0
+  [&] () {
+    return;$0
   }
 
 ### lambda recursive
 snippet     lambda-expression-recursive
 abbr        lambda-recursive
 options     word
-  auto ${1:f} = [&] (auto self, auto && ${2:x}) {
-    return self (self, $2);
-  };
+  auto f = [&] (auto self) {
+    return self (self);
+  };$0
 
 ### function
 snippet     function
@@ -284,6 +290,16 @@ snippet     sum()
 abbr        sum of
   accumulate (begin (${1:v}), end ($1), typename iterator_traits <decltype (begin ($1))>::value_type {});$0
 
+### define rep
+snippet     define-rep
+abbr        define rep
+  #define rep(i,n) for (decay_t <decltype (n)> i = 0, i ## __len = (n); i < i ## __len; ++ i)$0
+
+### define repr
+snippet     define-repr
+abbr        define repr
+  #define repr(i,n) for (auto i = (n); i -- > 0;)$0
+
 ### define FOR
 snippet     define-FOR
 abbr        define FOR
@@ -293,11 +309,6 @@ abbr        define FOR
 snippet     define-FORR
 abbr        define FORR
   #define FORR(i,b,e) for (common_type_t <decltype (b), decltype (e)> i = (e), i ## __begin = (b); i -- > i ## __begin;)$0
-
-### define rep
-snippet     define-rep
-abbr        define rep
-  #define rep(i,n) for (decay_t <decltype (n)> i = 0, i ## __len = (n); i < i ## __len; ++ i)$0
 
 ### define ALL
 snippet     define-ALL
