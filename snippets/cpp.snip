@@ -13,12 +13,12 @@ snippet     main()
 abbr        main
 #options     head
   #include <bits/stdc++.h>
-  #define FOR(i,b,e) for (common_type_t <decltype (b), decltype (e)> i = (b), i ## __end = (e); i < i ## __end; ++ i)
-  #define rep(i,n)   FOR (i, size_t {}, n)
+  #define FOR(i,b,e) for (common_type_t<decltype(b),decltype(e)> i = (b), i ## __end = (e); i < i ## __end; ++ i)
+  #define rep(i,n)   FOR (i, size_t{}, n)
   #define ALL(x)     begin (x), end (x)
   using namespace std;
   using ll = int64_t;
-  constexpr ll inf = 0xde0b6b43b9aca00;
+  constexpr ll inf = 2e18;
   
   auto main () -> int
   {
@@ -320,6 +320,13 @@ snippet     define-FOR_WITH_INDEX
 abbr        define FOR_WITH_INDEX
   #define FOR_WITH_INDEX(i,ite,b,e) for (size_t i = 0; i == 0; i |= 1) for (auto ite = (b), ite ## __end = (e); ite != ite ## __end; static_cast <void> (++ ite), ++ i)$0
 
+### define RECURSIVE_LAMBDA series
+snippet     define-RECURSIVE_LAMBDA-series
+abbr        define RECURSIVE_LAMBDA series
+  #define RECURSIVE_LAMBDA(...)	[&] (auto self, __VA_ARGS__)
+  #define RECURSIVE_CALL(...)	self (self, __VA_ARGS__)
+  #define INVOKE(f,...)		f (f, __VA_ARGS__)$0
+
 ### define dump
 snippet     define-dump
 abbr        define dump
@@ -328,17 +335,18 @@ abbr        define dump
 ### define inf
 snippet     define-inf
 abbr        define inf [constexpr]
-  constexpr int64_t inf = 0xde0b6b43b9aca00;$0
-
-### inf value
-snippet     inf-value
-abbr        inf-value [literal]
-  0xde0b6b43b9aca00$0
+  constexpr int64_t inf = 0x1bc16d683b9aca07;$0
 
 ### define EPS
 snippet     define-EPS
 abbr        define EPS [constexpr]
   constexpr auto EPS = 1e-9;$0
+
+### define operator""
+snippet     define-operator""
+abbr        define operator""
+  constexpr auto operator"" _zu (unsigned long long x) noexcept { return static_cast <size_t> (x); }
+  constexpr auto operator"" _ll (unsigned long long x) noexcept { return static_cast <int64_t> (x); }$0
 
 ### include guard
 snippet     include-guard

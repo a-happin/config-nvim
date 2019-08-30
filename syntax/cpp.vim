@@ -8,11 +8,10 @@ runtime! syntax/c.vim
 unlet b:current_syntax
 
 " C++ extensions
-syn keyword cppStatement	new delete this friend using
+syn keyword cppStatement	new delete this friend using rep
 syn keyword cppAccess		public protected private
 syn keyword cppModifier		inline virtual explicit export
-syn keyword cppType		bool wchar_t
-syn keyword cppUserDefinedType	string string_view Iterator ll
+syn keyword cppType		bool wchar_t string string_view Iterator ll
 syn match cppUserDefinedType	/\v<\k*_t>/
 syn keyword cppExceptions	throw try catch
 syn keyword cppOperator		operator typeid
