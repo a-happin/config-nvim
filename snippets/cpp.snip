@@ -342,6 +342,12 @@ snippet     define-EPS
 abbr        define EPS [constexpr]
   constexpr auto EPS = 1e-9;$0
 
+### priority_queue_reverse
+snippet     define-PQR
+abbr        define priority_queue_reverse
+  template <typename T>
+  using PQR = priority_queue <T, vector <T>, greater <T>>;
+
 ### define operator""
 snippet     define-operator""
 abbr        define operator""
