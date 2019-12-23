@@ -66,7 +66,7 @@ let g:neosnippet#snippets_directory = '~/.config/nvim/snippets'
 let g:neosnippet#disable_runtime_snippets = { '_' : 1 }
 
 let g:ale_linters = {'cpp': ['clang']}
-let g:ale_cpp_clang_options = "-std=c++14 -Weverything -Wno-c++98-compat-pedantic -Wno-c11-extensions -Wno-unused-macros -Wno-unused-const-variable -pedantic-errors"
+let g:ale_cpp_clang_options = "-std=c++2a -Weverything -Wno-c++98-compat-pedantic -Wno-c11-extensions -Wno-unused-macros -Wno-unused-const-variable -pedantic-errors"
 
 
 " *******************************
