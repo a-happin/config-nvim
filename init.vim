@@ -67,7 +67,8 @@ let g:neosnippet#disable_runtime_snippets = { '_' : 1 }
 
 let g:ale_linters = {'cpp': ['clang']}
 let g:ale_cpp_clang_options = "-std=c++2a -Weverything -Wno-c++98-compat-pedantic -Wno-c11-extensions -Wno-unused-macros -Wno-unused-const-variable -pedantic-errors -I ~/work/kizuna/include"
-
+" 競プロモード！
+command! ContestMode let g:ale_cpp_clang_options = "-std=c++14 -Weverything -Wno-c++98-compat-pedantic -Wno-c11-extensions -Wno-unused-macros -Wno-unused-const-variable -Wno-sign-conversion -pedantic-errors"
 
 " *******************************
 " **  autocmd
@@ -98,6 +99,11 @@ augroup END
 augroup file-reload
   autocmd!
   autocmd InsertEnter,WinEnter * checktime
+augroup END
+
+augroup hook-cursor-moved
+  autocmd!
+  autocmd CursorMoved * let b:parentheses_completion_stack = 0
 augroup END
 
 
@@ -396,31 +402,32 @@ inoremap <expr><S-Tab> pumvisible () ? '<C-p>' : '<C-d>'
 imap <expr><CR> pumvisible () ? neosnippet#expandable () ? '<Plug>(neosnippet_expand)' : '<C-y>' : CRKey ()
 
 " 括弧の対応の補完
-inoremap <expr>( CursorChar () !~ '\k' ? '()<Left>' : '('
-"inoremap <expr>( LeftParenthesis ()
-inoremap <expr>) CursorChar () ==# ')' ? '<Right>' : ')'
-"inoremap <expr>) RightParenthesis (')')
+inoremap <expr>( BeginParentheses('(',')')
+inoremap <expr>) EndParentheses('(',')')
 
-inoremap <expr>[ CursorChar () !~ '\k' ? '[]<Left>' : '['
-inoremap <expr>] CursorChar () ==# ']' ? '<Right>' : ']'
+inoremap <expr>[ BeginParentheses('[',']')
+inoremap <expr>] EndParentheses('[',']')
 
-inoremap <expr>{ CursorChar () !~ '\k' ? '{}<Left>' : '{'
-inoremap <expr>} CursorChar () ==# '}' ? '<Right>' : '}'
+inoremap <expr>{ BeginParentheses('{','}')
+inoremap <expr>} EndParentheses('{','}')
 
 "inoremap <expr>> CursorChar () ==# '>' ? '<Right>' : '>'
 
+" ダブルクォーテーション
 inoremap <expr>" CursorChar () ==# '"' ? '<Right>' : CursorChar () !~ '\k' && PreCursorString () =~ '[ ([{,]$' ? '""<Left>' : '"'
 
+" シングルクォーテーション
 inoremap <expr>' CursorChar () ==# '''' ? '<Right>' : CursorChar () !~ '\k' && PreCursorString () =~ '[ ([{,]$' ? '''''<Left>' : ''''
 
+" バッククォート
 inoremap <expr>` CursorChar () ==# '`' ? '<Right>' : CursorChar () !~ '\k' && PreCursorString () =~ '[ ([{,]$\\|^$' ? '``<Left>' : '`'
 
-" 括弧の対応を一気に消します
-inoremap <expr><BS> KamiBackspace ()
-inoremap <expr><Del> KamiDelete ()
+" 消します
+inoremap <expr><BS> BackspaceKey ()
+"inoremap <expr><Del> DeleteKey ()
 
 " いいかんじの'/'
-inoremap <expr>/ KamiSlash ()
+inoremap <expr>/ SlashKey ()
 
 " 重複したスペースの入力ができなくなります
 " 入力したい場合は<C-v><Space>
@@ -432,6 +439,9 @@ nnoremap <expr>0 PreCursorString () =~ '^\s*$' ? '0' : '^'
 nnoremap <expr><Home> PreCursorString () =~ '^\s*$' ? '<Home>' : '^'
 inoremap <expr><Home> PreCursorString () =~ '^\s*$' ? '<Home>' : '<C-o>^'
 
+" コメントアウト
+nnoremap <C-_> I// <Esc>
+
 " auto complete
 " 文字列化してexecuteしないとkeyがキーとして解釈されてしまう
 "for key in split ("1234567890qwertyuiopasdfghjklzxcvbnmQWERTYUIOPASDFGHJKLZXCVBNM_",'\zs')
@@ -441,7 +451,7 @@ inoremap <expr><Home> PreCursorString () =~ '^\s*$' ? '<Home>' : '<C-o>^'
 "augroup insert-custom
 "  autocmd!
 "  autocmd InsertEnter * let b:last_cursor_moved = v:false
-"  autocmd CursorMovedI * let b:last_cursor_moved = v:true
+"  autocmd CursorMoved * let b:cursor_moved = v:true
 "  autocmd InsertCharPre * let b:last_cursor_moved = v:false
 "augroup END
 
@@ -453,18 +463,18 @@ inoremap <expr><Home> PreCursorString () =~ '^\s*$' ? '<Home>' : '<C-o>^'
 " auto complete
 " 2文字目から自動補完開始
 " htmlタグかもしれないときは'>'も挿入する
-function! AutoComplete (key)
-  if pumvisible ()
-    return a:key
-  else
-    let l:pre = PreCursorString ()
-    if l:pre =~ '\k$'
-      return a:key . "\<C-n>"
-    elseif IsRightAngleBracketInsertable (l:pre , CursorChar ())
-      return a:key . ">\<Left>"
-    else
-    return a:key
-endfunction
+"function! AutoComplete (key)
+"  if pumvisible ()
+"    return a:key
+"  else
+"    let l:pre = PreCursorString ()
+"    if l:pre =~ '\k$'
+"      return a:key . "\<C-n>"
+"    elseif IsRightAngleBracketInsertable (l:pre , CursorChar ())
+"      return a:key . ">\<Left>"
+"    else
+"    return a:key
+"endfunction
 
 " カーソル位置の文字
 function! CursorChar ()
@@ -481,7 +491,30 @@ function! PreCursorString ()
   endif
 endfunction
 
-" 神Tab
+" 括弧開き
+" カーソル直下がキーワードでなかった場合、閉じ括弧を補完
+function! BeginParentheses(begin,end)
+  if CursorChar () !~ '\k'
+    let b:parentheses_completion_stack += 1
+    return a:begin . a:end . "\<Left>"
+  else
+    return a:begin
+  endif
+endfunction
+
+" 括弧閉じ
+" 補完スタックがある時、単に右に移動
+" それ以外は括弧閉じる
+function! EndParentheses(begin,end)
+  if b:parentheses_completion_stack > 0 && CursorChar () ==# a:end
+    let b:parentheses_completion_stack -= 1
+    return "\<Right>"
+  else
+    return a:end
+  endif
+endfunction
+
+" Tab
 " キーワードなら補完開始
 " スラッシュならファイル名補完開始
 " それ以外はTab
@@ -496,7 +529,10 @@ function! TabKey ()
   endif
 endfunction
 
-" 神CR
+" CR
+" カーソルが{}の間ならいい感じに改行
+" カーソルが``の間なら```にして改行
+" それ以外は改行
 function! CRKey ()
   let l:pre = PreCursorString ()
   let l:cur = CursorChar ()
@@ -509,30 +545,36 @@ function! CRKey ()
   endif
 endfunction
 
-" 括弧の対応の消去
-function! s:KamiDelete_impl (key)
+" 空の括弧の中にいるかどうか
+function! IsInEmptyParentheses ()
   let l:pre = PreCursorString ()
   let l:cur = CursorChar ()
-  if (l:pre =~ '($' && l:cur ==# ')') || (l:pre =~ '[$' && l:cur ==# ']') || (l:pre =~ '{$' && l:cur ==# '}') || (l:pre =~ '<$' && l:cur ==# '>') || (l:pre =~ '"$' && l:cur ==# '"') || (l:pre =~ '''$' && l:cur ==# '''') || (l:pre =~ '`$' && l:cur ==# '`')
+  return (l:pre =~ '($' && l:cur ==# ')') || (l:pre =~ '[$' && l:cur ==# ']') || (l:pre =~ '{$' && l:cur ==# '}') || (l:pre =~ '<$' && l:cur ==# '>') || (l:pre =~ '"$' && l:cur ==# '"') || (l:pre =~ '''$' && l:cur ==# '''') || (l:pre =~ '`$' && l:cur ==# '`')
+endfunction
+
+" Backspace Key
+function! BackspaceKey ()
+  if IsInEmptyParentheses()
     return "\<BS>\<Del>"
   else
-    return a:key
+    return "\<BS>"
   endif
 endfunction
 
-" 神Backspace
-function! KamiBackspace ()
-  return s:KamiDelete_impl ("\<BS>")
+" Delete Key
+function! DeleteKey ()
+  if IsInEmptyParentheses()
+    return "\<BS>\<Del>"
+  else
+    return "\<Del>"
+  endif
 endfunction
 
-" 神Delete
-function! KamiDelete ()
-  return s:KamiDelete_impl ("\<Delete>")
-endfunction
-
-" 神/
-" カミツルギではない
-function! KamiSlash ()
+" Slash Key
+" 直前が*または\だった場合、そのまま/
+" < だった場合、/を入力した後オムニ補完開始
+" それ以外: /を入力した後ファイル名補完開始
+function! SlashKey ()
   let l:pre = PreCursorString ()
   if l:pre =~ '[/*\\]$'
     return '/'
@@ -544,18 +586,8 @@ function! KamiSlash ()
     endif
   else
     return "/\<C-x>\<C-f>"
+  endif
 endfunction
-
-" ban duplicate space
-"function! BanDuplicateSpace ()
-"  if PreCursorString () =~ ' $'
-"    return ''
-"  elseif CursorChar () ==# ' '
-"    return "\<Right>"
-"  else
-"    return "\<Space>"
-"  endif
-"endfunction
 
 " '>'が自動挿入できるかどうか
 " htmlタグ用
@@ -569,4 +601,3 @@ function! s:AutoSaveIfPossible ()
     write
   endif
 endfunction
-
