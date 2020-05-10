@@ -1,6 +1,9 @@
 set encoding=utf-8
 scriptencoding utf-8
 
+let s:xdg_config_home = empty ($XDG_CONFIG_HOME) ? expand ('~/.config') : $XDG_CONFIG_HOME
+let s:nvim_directory = s:xdg_config_home . '/nvim'
+
 " *******************************
 " **  dein.vim
 " *******************************
@@ -49,11 +52,7 @@ endif
 " **  (v'-')っ First Initialize
 " *******************************
 
-" ファイル別のプラグインを有効化
-" ファイル別のインデントを有効化
 filetype plugin indent on
-
-" syntaxを有効化
 syntax on
 
 
@@ -109,6 +108,12 @@ augroup END
 augroup hook-cursor-moved
   autocmd!
   autocmd CursorMoved * let b:parentheses_completion_stack = 0
+augroup END
+
+augroup load-template
+  autocmd!
+  autocmd BufNewFile *.cpp  execute '0r ' . s:nvim_directory . '/template/.cpp'
+  autocmd BufNewFile *.html execute '0r ' . s:nvim_directory . '/template/.html'
 augroup END
 
 
