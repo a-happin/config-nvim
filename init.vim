@@ -5,6 +5,11 @@ scriptencoding utf-8
 " **  dein.vim
 " *******************************
 
+" install dein automatically
+if !isdirectory ('~/.cache/dein')
+  call system ('curl -s https://raw.githubusercontent.com/Shougo/dein.vim/master/bin/installer.sh | sh -s -- ~/.cache/dein')
+endif
+
 set runtimepath+=~/.cache/dein/repos/github.com/Shougo/dein.vim
 
 if dein#load_state ('~/.cache/dein')
