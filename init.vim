@@ -2,39 +2,48 @@ set encoding=utf-8
 scriptencoding utf-8
 
 let s:xdg_config_home = empty ($XDG_CONFIG_HOME) ? expand ('~/.config') : $XDG_CONFIG_HOME
+let s:xdg_cache_home = empty ($XDG_CACHE_HOME) ? expand ('~/.cache') : $XDG_CACHE_HOME
 let s:nvim_directory = s:xdg_config_home . '/nvim'
+let s:dein_directory = s:xdg_cache_home . '/dein'
 
 " *******************************
 " **  dein.vim
 " *******************************
 
 " install dein automatically
-if !isdirectory ('~/.cache/dein')
-  call system ('curl -s https://raw.githubusercontent.com/Shougo/dein.vim/master/bin/installer.sh | sh -s -- ~/.cache/dein')
+if !isdirectory (s:dein_directory)
+  call system ('curl -s https://raw.githubusercontent.com/Shougo/dein.vim/master/bin/installer.sh | sh -s -- ' . s:dein_directory)
 endif
 
-set runtimepath+=~/.cache/dein/repos/github.com/Shougo/dein.vim
+" add dein path in runtimepath
+execute 'set runtimepath+=' . s:dein_directory . '/repos/github.com/Shougo/dein.vim'
 
-if dein#load_state ('~/.cache/dein')
-  call dein#begin ('~/.cache/dein')
+if dein#load_state (s:dein_directory)
+  call dein#begin (s:dein_directory)
 
   " requires
-  call dein#add ('~/.cache/dein/repos/github.com/Shougo/dein.vim')
+  call dein#add (s:dein_directory . '/repos/github.com/Shougo/dein.vim')
+
+  " LSP client, completion
+  call dein#add ('neoclide/coc.nvim', {'merged': 0, 'rev': 'release'})
 
   " completion
-  call dein#add ('Shougo/deoplete.nvim')
+  "call dein#add ('Shougo/deoplete.nvim')
 
   " make deoplete use dictionary
-  call dein#add ('deoplete-plugins/deoplete-dictionary')
+  "call dein#add ('deoplete-plugins/deoplete-dictionary')
 
   " snippets
-  call dein#add ('Shougo/neosnippet.vim')
+  "call dein#add ('Shougo/neosnippet.vim')
 
   " default snippets
-  "call dein#add('Shougo/neosnippet-snippets')
+  "call dein#add ('Shougo/neosnippet-snippets')
 
   " asynchronous lint engine
-  call dein#add ('w0rp/ale')
+  "call dein#add ('w0rp/ale')
+
+  " customize statusline
+  call dein#add ('itchyny/lightline.vim')
 
   " 色コードを色で表示
   call dein#add ('gorodinskiy/vim-coloresque')
@@ -44,7 +53,7 @@ if dein#load_state ('~/.cache/dein')
 endif
 
 " auto install new plugin
-if dein#check_install ()
+if has ('vim_starting') && dein#check_install ()
   call dein#install ()
 endif
 
@@ -55,15 +64,14 @@ endif
 filetype plugin indent on
 syntax on
 
-
 " *******************************
 " **  plugin settings
 " *******************************
 
-let g:deoplete#enable_at_startup = 1
-call deoplete#custom#source ('dictionary', 'matchers', ['matcher_head'])
-call deoplete#custom#source ('dictionary', 'rank', 999)
-call deoplete#custom#source ('_', 'sorters', ['sorter_rank', 'sorter_word'])
+let g:deoplete#enable_at_startup = 0
+"call deoplete#custom#source ('dictionary', 'matchers', ['matcher_head'])
+"call deoplete#custom#source ('dictionary', 'rank', 999)
+"call deoplete#custom#source ('_', 'sorters', ['sorter_rank', 'sorter_word'])
 
 let g:neosnippet#snippets_directory = '~/.config/nvim/snippets'
 " which disables all runtime snippets
@@ -73,6 +81,39 @@ let g:ale_linters = {'cpp': ['clang']}
 let g:ale_cpp_clang_options = "-std=c++2a -Weverything -Wno-c++98-compat-pedantic -Wno-c11-extensions -Wno-unused-macros -Wno-unused-const-variable -pedantic-errors -I ~/work/kizuna/include"
 " 競プロモード！
 command! ContestMode let g:ale_cpp_clang_options = "-std=c++14 -Weverything -Wno-c++98-compat-pedantic -Wno-c11-extensions -Wno-unused-macros -Wno-unused-const-variable -Wno-sign-conversion -pedantic-errors"
+
+if dein#tap ('lightline.vim')
+  let g:lightline = {
+        \   'colorscheme': 'wombat',
+        \   'active': {
+        \     'left': [
+        \       [ 'mode', 'paste' ],
+        \       [ 'readonly', 'absolutepath', 'modified' ]
+        \     ],
+        \     'right': [
+        \       [ 'lineinfo' ],
+        \       [ 'percent' ],
+        \       [ 'fileformat', 'fileencoding', 'filetype' ],
+        \       [ 'cocstatus' ]
+        \     ]
+        \   },
+        \   'component_function': {
+        \     'cocstatus': 'coc#status'
+        \   }
+        \ }
+endif
+
+let g:coc_global_extensions = [
+      \ 'coc-lists',
+      \ 'coc-vimlsp',
+      \ 'coc-json',
+      \ 'coc-tsserver',
+      \]
+
+augroup coc-config
+  autocmd!
+  autocmd CursorHold * silent call CocActionAsync ('highlight')
+augroup END
 
 " *******************************
 " **  autocmd
@@ -97,7 +138,7 @@ augroup END
 
 augroup auto-save
   autocmd!
-  autocmd CursorHold,InsertLeave * silent call <SID>AutoSaveIfPossible ()
+  autocmd CursorHold,InsertLeave * silent call <SID>auto_save_if_possible ()
 augroup END
 
 augroup file-reload
@@ -107,7 +148,7 @@ augroup END
 
 augroup hook-cursor-moved
   autocmd!
-  autocmd CursorMoved * let b:parentheses_completion_stack = 0
+  autocmd CursorMoved,BufRead,BufNewFile * let b:parentheses_completion_stack = 0
 augroup END
 
 augroup load-template
@@ -237,6 +278,9 @@ set preserveindent
 " if 0, limit.
 set pumheight=25
 
+" Enables pseudo-transparency for the |popup-menu|.
+set pumblend=0
+
 " 相対行番号
 "set relativenumber
 
@@ -250,8 +294,14 @@ set shiftround
 " if 0, the same as tabstop.
 set shiftwidth=2
 
+" c: don't give |ins-completion-menu| messages.
+set shortmess+=c
+
 " display inputting command on lower right
 set showcmd
+
+" 現在の入力モードを表示しない(プラグインでstatuslineに表示するようにしたので)
+set noshowmode
 
 " 括弧入力時に対応する括弧に一瞬ジャンプしない（うざい）
 set noshowmatch
@@ -285,7 +335,7 @@ set spelllang=en,cjk
 "set splitright
 
 " format of status line
-set statusline=%F\ %m%r%h%w%=[FORMAT=%{&ff}]\ %y\ (%3v,%3l)\ [%2p%%]
+"set statusline=%F\ %m%r%h%w%=[FORMAT=%{&ff}]\ %y\ (%3v,%3l)\ [%2p%%]
 
 " do not create swap file
 set noswapfile
@@ -303,7 +353,7 @@ set updatetime=1000
 " >: <Right>
 " [: <Left> in insert mode
 " ]: <Right> in insert mode
-set whichwrap=b,s,<,[
+set whichwrap=b,s
 
 " charater which starts completion in command line
 set wildchar=<Tab>
@@ -323,6 +373,8 @@ set wrap
 " search loop
 set wrapscan
 
+" Make a backup before overwriting a file.
+set nowritebackup
 
 " *******************************
 " **  colorscheme
@@ -361,7 +413,7 @@ vnoremap <MiddleMouse> <Nop>
 inoremap <C-c> <Nop>
 
 " ビジュアルモードでCtrl-Aで全選択
-vnoremap <C-a> ggoG
+vnoremap <C-a> gg0oG$
 
 " 選択中にCtrl-Cでクリップボードにコピー
 vnoremap <C-c> "+y
@@ -371,6 +423,13 @@ nnoremap <S-Tab> <<
 
 " Shift-Yで行末までヤンク
 nnoremap Y y$
+
+" 見た目上での縦移動(wrapしてできた行を複数行とみなす？)
+nnoremap j gj
+nnoremap k gk
+
+" 定義ジャンプ
+nmap <silent> gd <Plug>(coc-definition)
 
 " 選択モードで選択中の範囲を囲む
 " ()
@@ -400,8 +459,8 @@ smap <C-k> <Plug>(neosnippet_expand_or_jump)
 xmap <C-k> <Plug>(neosnippet_expand_target)
 
 " ポップアップ補完メニューが表示されているときは次の候補を選択
-imap <expr><Tab> pumvisible () ? '<C-n>' : neosnippet#expandable_or_jumpable () ? '<Plug>(neosnippet_expand_or_jump)' : TabKey ()
-smap <expr><Tab> neosnippet#expandable_or_jumpable () ? '<Plug>(neosnippet_expand_or_jump)' : '<Tab>'
+inoremap <silent><expr><Tab> <SID>tab_key ()
+"smap <expr><Tab> neosnippet#expandable_or_jumpable () ? '<Plug>(neosnippet_expand_or_jump)' : '<Tab>'
 
 " ポップアップ補完メニューが表示されているときは前の候補を選択
 " それ以外はインデントを1つ下げる
@@ -409,48 +468,59 @@ inoremap <expr><S-Tab> pumvisible () ? '<C-p>' : '<C-d>'
 
 " ポップアップ補完メニューが表示されているときは確定
 "inoremap <expr><CR> pumvisible () ? '<C-y>' : KamiCR ()
-imap <expr><CR> pumvisible () ? neosnippet#expandable () ? '<Plug>(neosnippet_expand)' : '<C-y>' : CRKey ()
+inoremap <silent><expr><CR> <SID>cr_key ()
 
 " 括弧の対応の補完
-inoremap <expr>( BeginParentheses('(',')')
-inoremap <expr>) EndParentheses('(',')')
+inoremap <silent><expr> ( <SID>begin_parenthesis ('(',')')
+inoremap <silent><expr> ) <SID>end_parenthesis   ('(',')')
+inoremap <silent><expr> { <SID>begin_parenthesis ('{','}')
+inoremap <silent><expr> } <SID>end_parenthesis   ('{','}')
+inoremap <silent><expr> [ <SID>begin_parenthesis ('[',']')
+inoremap <silent><expr> ] <SID>end_parenthesis   ('[',']')
 
-inoremap <expr>[ BeginParentheses('[',']')
-inoremap <expr>] EndParentheses('[',']')
+" クォーテーションの自動補完
+inoremap <silent><expr> " <SID>quotation_key ('"')
+inoremap <silent><expr> ' <SID>quotation_key ('''')
+inoremap <silent><expr> ` <SID>quotation_key ('`')
 
-inoremap <expr>{ BeginParentheses('{','}')
-inoremap <expr>} EndParentheses('{','}')
-
-"inoremap <expr>> CursorChar () ==# '>' ? '<Right>' : '>'
-
-" ダブルクォーテーション
-inoremap <expr>" CursorChar () ==# '"' ? '<Right>' : CursorChar () !~ '\k' && PreCursorString () =~ '[ ([{,]$' ? '""<Left>' : '"'
-
-" シングルクォーテーション
-inoremap <expr>' CursorChar () ==# '''' ? '<Right>' : CursorChar () !~ '\k' && PreCursorString () =~ '[ ([{,]$' ? '''''<Left>' : ''''
-
-" バッククォート
-inoremap <expr>` CursorChar () ==# '`' ? '<Right>' : CursorChar () !~ '\k' && PreCursorString () =~ '[ ([{,]$\\|^$' ? '``<Left>' : '`'
-
-" 消します
-inoremap <expr><BS> BackspaceKey ()
-"inoremap <expr><Del> DeleteKey ()
+" Backspace
+inoremap <silent><expr><BS> <SID>backspace_key ()
+"inoremap <expr><Del> delete_key ()
 
 " いいかんじの'/'
-inoremap <expr>/ SlashKey ()
+inoremap <silent><expr>/ <SID>slash_key ()
 
-" 重複したスペースの入力ができなくなります
-" 入力したい場合は<C-v><Space>
-"inoremap <expr><Space> BanDuplicateSpace ()
-
+" スペースキー
+inoremap <silent><expr><Space> <SID>space_key ()
 
 " インデントを考慮した<Home>
-nnoremap <expr>0 PreCursorString () =~ '^\s*$' ? '0' : '^'
-nnoremap <expr><Home> PreCursorString () =~ '^\s*$' ? '<Home>' : '^'
-inoremap <expr><Home> PreCursorString () =~ '^\s*$' ? '<Home>' : '<C-o>^'
+nnoremap <silent><expr>0 <SID>home_key ()
+nnoremap <silent><expr><Home> <SID>home_key ()
+vnoremap <silent><expr>0 <SID>home_key ()
+vnoremap <silent><expr><Home> <SID>home_key ()
+inoremap <silent><expr><Home> '<C-o>' . <SID>home_key ()
 
 " コメントアウト
-nnoremap <C-_> I// <Esc>
+" Linuxでは<C-/>は<C-_>で設定しないといけないらしいが<C-/>で動くのだが…？
+nnoremap <C-/> I// <Esc>
+
+" CocList
+nmap <silent> <Space><Space> :<C-u>CocList<CR>
+
+" Rename
+nmap <silent> <Space>r <Plug>(coc-rename)
+
+" 次のdiagnostic(エラー、警告)
+nmap <silent> <Space>i <Plug>(coc-diagnostic-next)
+
+" Paste from clipboard
+nnoremap <Space>p "+p
+nnoremap <Space>P "+P
+
+" show documentation
+nnoremap <silent> <F1> :<C-u>call <SID>show_documentation ()<CR>
+
+"inoremap <F5> <C-o>:<C-u>echo <SID>cursor_line_string()<CR>
 
 " auto complete
 " 文字列化してexecuteしないとkeyがキーとして解釈されてしまう
@@ -470,41 +540,62 @@ nnoremap <C-_> I// <Esc>
 " **  function!
 " *******************************
 
-" auto complete
-" 2文字目から自動補完開始
-" htmlタグかもしれないときは'>'も挿入する
-"function! AutoComplete (key)
-"  if pumvisible ()
-"    return a:key
-"  else
-"    let l:pre = PreCursorString ()
-"    if l:pre =~ '\k$'
-"      return a:key . "\<C-n>"
-"    elseif IsRightAngleBracketInsertable (l:pre , CursorChar ())
-"      return a:key . ">\<Left>"
-"    else
-"    return a:key
-"endfunction
-
 " カーソル位置の文字
-function! CursorChar ()
+function! s:cursor_char ()
   return matchstr (getline ('.') , '.' , col ('.') - 1)
 endfunction
 
-" カーソル位置までの文字列(直下を含まない)
-function! PreCursorString ()
+" 現在の行にある文字列をカーソル位置の前と後に分割して返す
+" 前はカーソル直下の文字を含まない
+" 後はカーソル直下の文字を含む
+function! s:cursor_line_string ()
+  let l:str = getline ('.')
   let l:pos = col ('.') - 1
   if l:pos == 0
-    return ''
+    return ['', l:str]
   else
-    return getline ('.')[:l:pos - 1]
+    return [l:str[:l:pos - 1], l:str[l:pos:]]
   endif
 endfunction
 
-" 括弧開き
+" 空の括弧の中にいるかどうか
+function! s:is_in_empty_parentheses (pre, post)
+  return  (a:pre =~# '($' && a:post =~# '^)')   ||
+        \ (a:pre =~# '[$' && a:post =~# '^]')   ||
+        \ (a:pre =~# '{$' && a:post =~# '^}')   ||
+        \ (a:pre =~# '<$' && a:post =~# '^>')   ||
+        \ (a:pre =~# '"$' && a:post =~# '^"')   ||
+        \ (a:pre =~# '''$' && a:post =~# '^''') ||
+        \ (a:pre =~# '`$' && a:post =~# '^`')
+endfunction
+
+function! s:is_in_empty_parenthes_with_space (pre, post)
+  return  (a:pre =~# '( $' && a:post =~# '^ )')   ||
+        \ (a:pre =~# '[ $' && a:post =~# '^ ]')   ||
+        \ (a:pre =~# '{ $' && a:post =~# '^ }')   ||
+        \ (a:pre =~# '< $' && a:post =~# '^ >')   ||
+        \ (a:pre =~# '" $' && a:post =~# '^ "')   ||
+        \ (a:pre =~# ''' $' && a:post =~# '^ ''') ||
+        \ (a:pre =~# '` $' && a:post =~# '^ `')
+endfunction
+
+" 括弧閉じるを補完するべきかどうか
+" カーソル位置が末尾、
+" カーソル位置に空白、
+" カーソル位置に括弧閉じるがある場合は補完するべき。(連続で入力したときに補完されないのはおかしいので)
+function! s:should_complete_end_parenthesis (pre, post)
+  return a:post =~# '^$\|^\s\|^[)}\]>]'
+endfunction
+
+""""""""""""""""""""""""""""""""
+" Key
+""""""""""""""""""""""""""""""""
+
+" 括弧開始
 " カーソル直下がキーワードでなかった場合、閉じ括弧を補完
-function! BeginParentheses(begin,end)
-  if CursorChar () !~ '\k'
+function! s:begin_parenthesis (begin, end)
+  let [l:pre, l:post] = s:cursor_line_string ()
+  if s:should_complete_end_parenthesis (l:pre, l:post)
     let b:parentheses_completion_stack += 1
     return a:begin . a:end . "\<Left>"
   else
@@ -515,8 +606,9 @@ endfunction
 " 括弧閉じ
 " 補完スタックがある時、単に右に移動
 " それ以外は括弧閉じる
-function! EndParentheses(begin,end)
-  if b:parentheses_completion_stack > 0 && CursorChar () ==# a:end
+function! s:end_parenthesis (begin, end)
+  let [l:pre, l:post] = s:cursor_line_string ()
+  if b:parentheses_completion_stack > 0 && l:post =~# '^' . a:end
     let b:parentheses_completion_stack -= 1
     return "\<Right>"
   else
@@ -524,47 +616,77 @@ function! EndParentheses(begin,end)
   endif
 endfunction
 
+
+" quotation
+" vimscriptの場合は行頭はコメントなので補完しない
+" カーソル位置に同じ文字がある場合は<Right>
+" 直前にキーワード(\k)がある場合は英文のクオーテーションマークの可能性が高いので補完しない
+" 括弧が補完できる条件を満たすなら補完する
+" それ以外はそのまま
+function! s:quotation_key (key)
+  let [l:pre, l:post] = s:cursor_line_string ()
+  if &filetype ==# 'vim' && l:pre ==# '' && a:key ==# '"'
+    return a:key
+  elseif l:post =~# '^' . a:key
+    return "\<Right>"
+  elseif a:key ==# '''' && l:pre =~# '\k$'
+    return a:key
+  elseif s:should_complete_end_parenthesis (l:pre, l:post)
+    return a:key . a:key . "\<Left>"
+  else
+    return a:key
+  endif
+endfunction
+
+
 " Tab
 " キーワードなら補完開始
 " スラッシュならファイル名補完開始
 " それ以外はTab
-function! TabKey ()
-  let l:pre = PreCursorString ()
-  if l:pre =~ '\k$'
+function! s:tab_key ()
+  if pumvisible ()
     return "\<C-n>"
-  elseif l:pre =~ '/$'
-    return "\<C-x>\<C-f>"
   else
-    return "\<Tab>"
+    let [l:pre, l:post] = s:cursor_line_string ()
+    if l:pre =~# '\k$'
+      return "\<C-n>"
+    elseif l:pre =~# '/$'
+      return "\<C-x>\<C-f>"
+    else
+      return "\<Tab>"
+    endif
   endif
 endfunction
+
 
 " CR
 " カーソルが{}の間ならいい感じに改行
 " カーソルが``の間なら```にして改行
 " それ以外は改行
-function! CRKey ()
-  let l:pre = PreCursorString ()
-  let l:cur = CursorChar ()
-  if l:pre =~ '{$' && l:cur ==# '}'
-    return "\<CR>\<Up>\<End>\<CR>"
-  elseif l:pre =~ '`$' && l:cur ==# '`'
-    return "``\<CR>``\<Up>\<End>\<CR>"
+function! s:cr_key ()
+  if pumvisible ()
+    return "\<C-y>"
   else
-    return "\<CR>"
+    let [l:pre, l:post] = s:cursor_line_string ()
+    if l:pre =~# '{$' && l:post =~# '^}'
+      return "\<CR>\<Up>\<End>\<CR>"
+    elseif l:pre =~# '"$' && l:post =~# '^"'
+      return "\"\"\<CR>\"\"\<Up>\<End>\<CR>"
+    elseif l:pre =~# '''$' && l:post =~# '^'''
+      return "''\<CR>''\<Up>\<End>\<CR>"
+    elseif l:pre =~# '`$' && l:post =~# '^`'
+      return "``\<CR>``\<Up>\<End>\<CR>"
+    else
+      return "\<CR>"
+    endif
   endif
 endfunction
 
-" 空の括弧の中にいるかどうか
-function! IsInEmptyParentheses ()
-  let l:pre = PreCursorString ()
-  let l:cur = CursorChar ()
-  return (l:pre =~ '($' && l:cur ==# ')') || (l:pre =~ '[$' && l:cur ==# ']') || (l:pre =~ '{$' && l:cur ==# '}') || (l:pre =~ '<$' && l:cur ==# '>') || (l:pre =~ '"$' && l:cur ==# '"') || (l:pre =~ '''$' && l:cur ==# '''') || (l:pre =~ '`$' && l:cur ==# '`')
-endfunction
 
 " Backspace Key
-function! BackspaceKey ()
-  if IsInEmptyParentheses()
+function! s:backspace_key ()
+  let [l:pre, l:post] = s:cursor_line_string ()
+  if s:is_in_empty_parentheses (l:pre, l:post) || s:is_in_empty_parenthes_with_space (l:pre, l:post)
     return "\<BS>\<Del>"
   else
     return "\<BS>"
@@ -572,42 +694,78 @@ function! BackspaceKey ()
 endfunction
 
 " Delete Key
-function! DeleteKey ()
-  if IsInEmptyParentheses()
+function! s:delete_key ()
+  let [l:pre, l:post] = s:cursor_line_string ()
+  if s:is_in_empty_parentheses (l:pre, l:post) || s:is_in_empty_parenthes_with_space (l:pre, l:post)
     return "\<BS>\<Del>"
   else
     return "\<Del>"
   endif
 endfunction
 
+
 " Slash Key
 " 直前が*または\だった場合、そのまま/
 " < だった場合、/を入力した後オムニ補完開始
 " それ以外: /を入力した後ファイル名補完開始
-function! SlashKey ()
-  let l:pre = PreCursorString ()
-  if l:pre =~ '[/*\\]$'
-    return '/'
-  elseif l:pre =~ '<$'
+function! s:slash_key ()
+  let [l:pre, l:post] = s:cursor_line_string ()
+  if l:pre =~# '[/*\\]$'
+    return "/"
+  elseif l:pre =~# '<$'
     if &omnifunc != ''
-      return "/\<C-x>\<C-o>\<C-y>"
+      return "/\<C-x>\<C-o>"
     else
-      return '/'
+      return "/"
     endif
   else
     return "/\<C-x>\<C-f>"
   endif
 endfunction
 
-" '>'が自動挿入できるかどうか
-" htmlタグ用
-function! IsRightAngleBracketInsertable (pre,cur)
-  return a:pre =~ '<$' && a:cur !~ '\k' && a:cur !=# '>'
+
+" Home Key
+" インデントを考慮した<Home>
+function! s:home_key ()
+  let [l:pre, l:post] = s:cursor_line_string ()
+  if l:pre =~# '^\s\+$'
+    return "0"
+  else
+    return "^"
+  endif
 endfunction
 
+
+" Space Key
+" インデントを考慮した<Home>
+function! s:space_key ()
+  let [l:pre, l:post] = s:cursor_line_string ()
+  if s:is_in_empty_parentheses (l:pre, l:post)
+    return "\<Space>\<Space>\<Left>"
+  else
+    return "\<Space>"
+  endif
+endfunction
+
+
+""""""""""""""""""""""""""""""""
+" utility
+""""""""""""""""""""""""""""""""
+
+" show vim help
+function! s:show_documentation ()
+  if (index (['vim', 'help'], &filetype) >= 0)
+    execute 'help ' . expand ('<cword>')
+  else
+    call CocAction ('doHover')
+  endif
+endfunction
+
+
 " 自動保存
-function! s:AutoSaveIfPossible ()
+function! s:auto_save_if_possible ()
   if &modified && &filetype != 'gitcommit' && filewritable (expand ('%'))
     write
   endif
 endfunction
+
