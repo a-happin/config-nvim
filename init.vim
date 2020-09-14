@@ -146,9 +146,9 @@ augroup file-reload
   autocmd InsertEnter,WinEnter * checktime
 augroup END
 
-augroup hook-cursor-moved
+augroup reset-parentheses-completion-stack
   autocmd!
-  autocmd CursorMoved,BufRead,BufNewFile * let b:parentheses_completion_stack = 0
+  autocmd InsertEnter * let b:parentheses_completion_stack = 0
 augroup END
 
 augroup load-template
@@ -235,6 +235,9 @@ set hidden
 
 " 検索時に大文字と小文字を区別しない
 set ignorecase
+
+" 置き換え時にプレビュー表示
+set inccommand=split
 
 " 入力中に検索を開始する
 set incsearch
@@ -428,6 +431,34 @@ nnoremap Y y$
 nnoremap j gj
 nnoremap k gk
 
+" ビジュアルモードでインデント調整時に選択範囲を解除しない
+xnoremap < <gv
+xnoremap > >gv
+
+" Paste from clipboard
+nnoremap <Space>p "+p
+nnoremap <Space>P "+P
+
+" 空白1文字挿入
+nnoremap <Space>i i<Space><Esc>
+nnoremap <Space>a a<Space><Esc>
+
+" 改行挿入
+nnoremap <Space>o o<Esc>
+nnoremap <Space>O O<Esc>
+
+" 入れ替え
+nnoremap ; :
+nnoremap : ;
+
+" 保存
+nnoremap <Space>w :<C-u>w<CR>
+
+nnoremap f<CR> $
+
+" 選択範囲をヤンクした文字列で上書き時にレジスタを汚さない
+nnoremap p pgvy
+
 " 定義ジャンプ
 nmap <silent> gd <Plug>(coc-definition)
 
@@ -459,16 +490,16 @@ smap <C-k> <Plug>(neosnippet_expand_or_jump)
 xmap <C-k> <Plug>(neosnippet_expand_target)
 
 " ポップアップ補完メニューが表示されているときは次の候補を選択
-inoremap <silent><expr><Tab> <SID>tab_key ()
+inoremap <silent><expr> <Tab> <SID>tab_key ()
 "smap <expr><Tab> neosnippet#expandable_or_jumpable () ? '<Plug>(neosnippet_expand_or_jump)' : '<Tab>'
 
 " ポップアップ補完メニューが表示されているときは前の候補を選択
 " それ以外はインデントを1つ下げる
-inoremap <expr><S-Tab> pumvisible () ? '<C-p>' : '<C-d>'
+inoremap <silent><expr> <S-Tab> pumvisible () ? '<C-p>' : '<C-d>'
 
 " ポップアップ補完メニューが表示されているときは確定
 "inoremap <expr><CR> pumvisible () ? '<C-y>' : KamiCR ()
-inoremap <silent><expr><CR> <SID>cr_key ()
+inoremap <silent><expr> <CR> <SID>cr_key ()
 
 " 括弧の対応の補完
 inoremap <silent><expr> ( <SID>begin_parenthesis ('(',')')
@@ -484,38 +515,34 @@ inoremap <silent><expr> ' <SID>quotation_key ('''')
 inoremap <silent><expr> ` <SID>quotation_key ('`')
 
 " Backspace
-inoremap <silent><expr><BS> <SID>backspace_key ()
+inoremap <silent><expr> <BS> <SID>backspace_key ()
 "inoremap <expr><Del> delete_key ()
 
 " いいかんじの'/'
-inoremap <silent><expr>/ <SID>slash_key ()
+inoremap <silent><expr> / <SID>slash_key ()
 
 " スペースキー
-inoremap <silent><expr><Space> <SID>space_key ()
+inoremap <silent><expr> <Space> <SID>space_key ()
 
 " インデントを考慮した<Home>
-nnoremap <silent><expr>0 <SID>home_key ()
-nnoremap <silent><expr><Home> <SID>home_key ()
-vnoremap <silent><expr>0 <SID>home_key ()
-vnoremap <silent><expr><Home> <SID>home_key ()
-inoremap <silent><expr><Home> '<C-o>' . <SID>home_key ()
+nnoremap <silent><expr> 0 <SID>home_key ()
+xnoremap <silent><expr> 0 <SID>home_key ()
+nnoremap <silent><expr> <Home> <SID>home_key ()
+vnoremap <silent><expr> <Home> <SID>home_key ()
+inoremap <silent><expr> <Home> '<C-o>' . <SID>home_key ()
 
 " コメントアウト
 " Linuxでは<C-/>は<C-_>で設定しないといけないらしいが<C-/>で動くのだが…？
 nnoremap <C-/> I// <Esc>
 
 " CocList
-nmap <silent> <Space><Space> :<C-u>CocList<CR>
+nnoremap <silent> <Space><Space> :<C-u>CocList<CR>
 
 " Rename
 nmap <silent> <Space>r <Plug>(coc-rename)
 
 " 次のdiagnostic(エラー、警告)
-nmap <silent> <Space>i <Plug>(coc-diagnostic-next)
-
-" Paste from clipboard
-nnoremap <Space>p "+p
-nnoremap <Space>P "+P
+nmap <silent> gi <Plug>(coc-diagnostic-next)
 
 " show documentation
 nnoremap <silent> <F1> :<C-u>call <SID>show_documentation ()<CR>
@@ -563,8 +590,11 @@ function! s:is_in_empty_parentheses (pre, post)
   return  (a:pre =~# '($' && a:post =~# '^)')   ||
         \ (a:pre =~# '[$' && a:post =~# '^]')   ||
         \ (a:pre =~# '{$' && a:post =~# '^}')   ||
-        \ (a:pre =~# '<$' && a:post =~# '^>')   ||
-        \ (a:pre =~# '"$' && a:post =~# '^"')   ||
+        \ (a:pre =~# '<$' && a:post =~# '^>')
+endfunction
+
+function! s:is_in_empty_quotation (pre, post)
+  return  (a:pre =~# '"$' && a:post =~# '^"')   ||
         \ (a:pre =~# '''$' && a:post =~# '^''') ||
         \ (a:pre =~# '`$' && a:post =~# '^`')
 endfunction
@@ -573,10 +603,7 @@ function! s:is_in_empty_parenthes_with_space (pre, post)
   return  (a:pre =~# '( $' && a:post =~# '^ )')   ||
         \ (a:pre =~# '[ $' && a:post =~# '^ ]')   ||
         \ (a:pre =~# '{ $' && a:post =~# '^ }')   ||
-        \ (a:pre =~# '< $' && a:post =~# '^ >')   ||
-        \ (a:pre =~# '" $' && a:post =~# '^ "')   ||
-        \ (a:pre =~# ''' $' && a:post =~# '^ ''') ||
-        \ (a:pre =~# '` $' && a:post =~# '^ `')
+        \ (a:pre =~# '< $' && a:post =~# '^ >')
 endfunction
 
 " 括弧閉じるを補完するべきかどうか
@@ -620,18 +647,15 @@ endfunction
 " quotation
 " vimscriptの場合は行頭はコメントなので補完しない
 " カーソル位置に同じ文字がある場合は<Right>
-" 直前にキーワード(\k)がある場合は英文のクオーテーションマークの可能性が高いので補完しない
-" 括弧が補完できる条件を満たすなら補完する
-" それ以外はそのまま
+" 直前と直後に空白や括弧しかない場合は補完する
+" それ以外は補完しない
 function! s:quotation_key (key)
   let [l:pre, l:post] = s:cursor_line_string ()
   if &filetype ==# 'vim' && l:pre ==# '' && a:key ==# '"'
     return a:key
   elseif l:post =~# '^' . a:key
     return "\<Right>"
-  elseif a:key ==# '''' && l:pre =~# '\k$'
-    return a:key
-  elseif s:should_complete_end_parenthesis (l:pre, l:post)
+  elseif l:pre =~# '^$\|\s$\|[({[<]$' && l:post =~# '^$\|^\s\|^[)}\]>]'
     return a:key . a:key . "\<Left>"
   else
     return a:key
@@ -668,7 +692,7 @@ function! s:cr_key ()
     return "\<C-y>"
   else
     let [l:pre, l:post] = s:cursor_line_string ()
-    if l:pre =~# '{$' && l:post =~# '^}'
+    if s:is_in_empty_parentheses (l:pre, l:post)
       return "\<CR>\<Up>\<End>\<CR>"
     elseif l:pre =~# '"$' && l:post =~# '^"'
       return "\"\"\<CR>\"\"\<Up>\<End>\<CR>"
@@ -686,7 +710,7 @@ endfunction
 " Backspace Key
 function! s:backspace_key ()
   let [l:pre, l:post] = s:cursor_line_string ()
-  if s:is_in_empty_parentheses (l:pre, l:post) || s:is_in_empty_parenthes_with_space (l:pre, l:post)
+  if s:is_in_empty_parentheses (l:pre, l:post) || s:is_in_empty_quotation (l:pre, l:post) || s:is_in_empty_parenthes_with_space (l:pre, l:post)
     return "\<BS>\<Del>"
   else
     return "\<BS>"
@@ -696,7 +720,7 @@ endfunction
 " Delete Key
 function! s:delete_key ()
   let [l:pre, l:post] = s:cursor_line_string ()
-  if s:is_in_empty_parentheses (l:pre, l:post) || s:is_in_empty_parenthes_with_space (l:pre, l:post)
+  if s:is_in_empty_parentheses (l:pre, l:post) || s:is_in_empty_quotation (l:pre, l:post) || s:is_in_empty_parenthes_with_space (l:pre, l:post)
     return "\<BS>\<Del>"
   else
     return "\<Del>"
