@@ -1,10 +1,22 @@
 set encoding=utf-8
 scriptencoding utf-8
 
-let s:xdg_config_home = empty ($XDG_CONFIG_HOME) ? expand ('~/.config') : $XDG_CONFIG_HOME
-let s:xdg_cache_home = empty ($XDG_CACHE_HOME) ? expand ('~/.cache') : $XDG_CACHE_HOME
-let s:nvim_directory = s:xdg_config_home . '/nvim'
-let s:dein_directory = s:xdg_cache_home . '/dein'
+
+" *******************************
+" **  env
+" *******************************
+
+if empty ($XDG_CONFIG_HOME)
+  let $XDG_CONFIG_HOME = $HOME . '/.config'
+endif
+
+if empty ($XDG_CACHE_HOME)
+  let $XDG_CACHE_HOME = $HOME . '/.cache'
+endif
+
+let s:nvim_directory = $XDG_CONFIG_HOME . '/nvim'
+let s:dein_directory = $XDG_CACHE_HOME . '/dein'
+
 
 " *******************************
 " **  dein.vim
@@ -15,14 +27,19 @@ if !isdirectory (s:dein_directory)
   call system ('curl -s https://raw.githubusercontent.com/Shougo/dein.vim/master/bin/installer.sh | sh -s -- ' . s:dein_directory)
 endif
 
+let s:dein_repo_directory = s:dein_directory . '/repos/github.com/Shougo/dein.vim'
+
 " add dein path in runtimepath
-execute 'set runtimepath+=' . s:dein_directory . '/repos/github.com/Shougo/dein.vim'
+"execute 'set runtimepath+=' . s:dein_directory . '/repos/github.com/Shougo/dein.vim'
+"let &runtimepath = s:dein_repo_directory . ',' . &runtimepath
+let &runtimepath = &runtimepath . ',' . s:dein_repo_directory
+
 
 if dein#load_state (s:dein_directory)
   call dein#begin (s:dein_directory)
 
   " requires
-  call dein#add (s:dein_directory . '/repos/github.com/Shougo/dein.vim')
+  call dein#add (s:dein_repo_directory)
 
   " LSP client, completion
   call dein#add ('neoclide/coc.nvim', {'merged': 0, 'rev': 'release'})
@@ -45,8 +62,14 @@ if dein#load_state (s:dein_directory)
   " customize statusline
   call dein#add ('itchyny/lightline.vim')
 
+  " visible indent
+  "call dein#add ('Yggdroot/indentLine')
+
   " 色コードを色で表示
   call dein#add ('gorodinskiy/vim-coloresque')
+
+  " toggle comment
+  call dein#add('tpope/vim-commentary')
 
   call dein#end ()
   call dein#save_state ()
@@ -82,6 +105,8 @@ let g:ale_cpp_clang_options = "-std=c++2a -Weverything -Wno-c++98-compat-pedanti
 " 競プロモード！
 command! ContestMode let g:ale_cpp_clang_options = "-std=c++14 -Weverything -Wno-c++98-compat-pedantic -Wno-c11-extensions -Wno-unused-macros -Wno-unused-const-variable -Wno-sign-conversion -pedantic-errors"
 
+"command! Myvimrc :edit $MYVIMRC
+
 if dein#tap ('lightline.vim')
   let g:lightline = {
         \   'colorscheme': 'wombat',
@@ -115,20 +140,68 @@ augroup coc-config
   autocmd CursorHold * silent call CocActionAsync ('highlight')
 augroup END
 
+
+let g:indentLine_enabled = 0
+let g:indentLine_setConceal = 0
+let g:indentLine_setColors = 0
+"let g:indentLine_bgcolor_term = 0
+"let g:indentLine_color_term = 111
+"let g:indentLine_char = '▏'
+
+" 上のヘルプコメントを隠す
+let g:netrw_banner = 0
+" tree形式で表示
+let g:netrw_liststyle = 3
+" サイズ表示を1024baseなK,M,G表記にする
+let g:netrw_sizestyle = "H"
+" 左右分割を右側に開く
+let g:netrw_altv = 1
+" 分割で開いたときに85%のサイズで開く
+let g:netrw_winsize = 15
+" 直前に開いていた位置で開く
+let g:netrw_browse_split = 4
+function! s:toggle_netrw () abort
+  let exists_netrw = 0
+  for i in range (1, bufnr ('$'))
+    if getbufvar (i, '&filetype') == 'netrw'
+      execute 'bwipeout ' . i
+      let exists_netrw = 1
+      break
+    endif
+  endfor
+  if !exists_netrw
+    topleft vertical new
+    vertical resize 30
+    Explore
+    setlocal winfixwidth
+    wincmd p
+  endif
+endfunction
+
+let g:vim_json_conceal = 0
+
+let g:NERDTreeDirArrowExpandable = '▸'
+let g:NERDTreeDirArrowCollapsible = '▾'
+let g:NERDTreeShowHidden = 1
+"nnoremap <C-e> :<C-u>NERDTreeToggle<CR>
+nnoremap <C-e> :<C-u>call <SID>toggle_netrw ()<CR>
+
 " *******************************
 " **  autocmd
 " *******************************
 
 " turn off IME when leave insert mode
-augroup resetIME
-  autocmd!
-  autocmd InsertLeave * silent !fcitx-remote -c
-augroup END
+if executable('fcitx-remote')
+  augroup resetIME
+    autocmd!
+    autocmd InsertLeave * silent !fcitx-remote -c
+  augroup END
+endif
 
 " auto reload vimrc
 augroup auto-reload-vimrc
   autocmd!
-  autocmd BufWritePost *init.vim source ${MYVIMRC}
+  autocmd BufWritePost *init.vim ++nested source ${MYVIMRC}
 augroup END
 
 augroup dictionary
@@ -138,12 +211,12 @@ augroup END
 
 augroup auto-save
   autocmd!
-  autocmd CursorHold,InsertLeave * silent call <SID>auto_save_if_possible ()
+  autocmd TextChanged,InsertLeave * silent call s:auto_save ()
 augroup END
 
 augroup file-reload
   autocmd!
-  autocmd InsertEnter,WinEnter * checktime
+  autocmd InsertEnter,WinEnter,FocusGained * checktime
 augroup END
 
 augroup reset-parentheses-completion-stack
@@ -157,6 +230,19 @@ augroup load-template
   autocmd BufNewFile *.html execute '0r ' . s:nvim_directory . '/template/.html'
 augroup END
 
+augroup terminal-fix
+  autocmd!
+  autocmd TermOpen term://* setlocal nonumber
+  autocmd TermOpen,TermEnter,WinEnter term://* startinsert
+  autocmd TermClose term://* stopinsert
+  autocmd TermClose term://*/zsh bw!
+augroup END
+
+
+tnoremap <Esc><Esc> <C-\><C-n>
+tnoremap <LeftRelease> <Nop>
+command! -nargs=* Hterminal botright split new | resize 15 | terminal <args>
+command! -nargs=* Vterminal botright vertical new | terminal <args>
 
 " *******************************
 " **  set
@@ -209,7 +295,7 @@ set completeopt=menuone,preview,noselect
 set concealcursor=nc
 
 " if 0, disable conceal
-"set conceallevel
+set conceallevel=2
 
 " 保存せずに終了しようとした時に確認を行う
 set confirm
@@ -222,7 +308,7 @@ set copyindent
 "set cursorcolumn
 
 " show cursor line
-set cursorline
+set nocursorline
 
 " dictionary
 "set dictionary=
@@ -258,7 +344,7 @@ set list
 set listchars=tab:»\ ,trail:_,nbsp:%
 
 " 括弧の対応
-set matchpairs=(:),{:},[:]
+set matchpairs=(:),{:},[:],<:>
 
 " showmatchのジャンプ時間(1 = 0.1sec)
 "set matchtime=2
@@ -290,6 +376,8 @@ set pumblend=0
 " show position of cursor
 set ruler
 
+set shell=zsh
+
 " <>などでインデント調整時にshiftwidthの倍数に丸める
 set shiftround
 
@@ -298,7 +386,7 @@ set shiftround
 set shiftwidth=2
 
 " c: don't give |ins-completion-menu| messages.
-set shortmess+=c
+set shortmess& shortmess+=c
 
 " display inputting command on lower right
 set showcmd
@@ -415,8 +503,17 @@ vnoremap <MiddleMouse> <Nop>
 " （InsertLeaveが呼ばれないので内部状態がおかしくなる）
 inoremap <C-c> <Nop>
 
+" 全部閉じて終了
+nnoremap <silent> <C-q> :<C-u>qall<CR>
+
 " ビジュアルモードでCtrl-Aで全選択
 vnoremap <C-a> gg0oG$
+
+" allテキストオブジェクト ファイル全体
+xnoremap all gg0oG$
+onoremap all :<C-u>normal! vgg0oG$<CR>
+
+"xnoremap <Space> gE<Space>f<Space>ow<BS>F<Space>
 
 " 選択中にCtrl-Cでクリップボードにコピー
 vnoremap <C-c> "+y
@@ -430,40 +527,54 @@ nnoremap Y y$
 " 見た目上での縦移動(wrapしてできた行を複数行とみなす？)
 nnoremap j gj
 nnoremap k gk
+xnoremap j gj
+xnoremap k gk
 
 " ビジュアルモードでインデント調整時に選択範囲を解除しない
-xnoremap < <gv
-xnoremap > >gv
+"xnoremap < <gv
+"xnoremap > >gv
 
 " Paste from clipboard
-nnoremap <Space>p "+p
-nnoremap <Space>P "+P
+nnoremap <Space>p "+]p
+nnoremap <Space>P "+]P
 
 " 空白1文字挿入
 nnoremap <Space>i i<Space><Esc>
 nnoremap <Space>a a<Space><Esc>
 
 " 改行挿入
-nnoremap <Space>o o<Esc>
-nnoremap <Space>O O<Esc>
+nnoremap <Space>o o<Space><C-u><Esc>
+nnoremap <Space>O O<Space><C-u><Esc>
 
 " 入れ替え
-nnoremap ; :
-nnoremap : ;
+"nnoremap ; :
+"nnoremap : ;
+"xnoremap ; :
+"xnoremap : ;
+
+" 閉じる
+nnoremap <silent> <Space>q :<C-u>bw<CR>
 
 " 保存
 nnoremap <Space>w :<C-u>w<CR>
 
+" 検索ハイライト消してファイルチェックして再描画！
+nnoremap <C-l> :<C-u>nohlsearch \| checktime<CR><C-l>
+
 nnoremap f<CR> $
+nnoremap <Space>0 $
+
+nnoremap <Space>, :<C-u>edit $MYVIMRC<CR>
 
 " 選択範囲をヤンクした文字列で上書き時にレジスタを汚さない
-nnoremap p pgvy
+xnoremap p pgvy
 
 " 定義ジャンプ
 nmap <silent> gd <Plug>(coc-definition)
 
 " 選択モードで選択中の範囲を囲む
 " ()
+xnoremap sb "zc(<C-r><C-o>z)<Esc>
 xnoremap <Plug>(surround)( "zc(<C-r><C-o>z)<Esc>
 xmap <Plug>(surround)) <Plug>(surround)(
 " {}
@@ -485,9 +596,10 @@ xnoremap <Plug>(surround)` "zc`<C-r><C-o>z`<Esc>
 xmap s <Plug>(surround)
 
 " for neosnippet
-imap <C-k> <Plug>(neosnippet_expand_or_jump)
-smap <C-k> <Plug>(neosnippet_expand_or_jump)
-xmap <C-k> <Plug>(neosnippet_expand_target)
+"imap <C-k> <Plug>(neosnippet_expand_or_jump)
+"smap <C-k> <Plug>(neosnippet_expand_or_jump)
+"xmap <C-k> <Plug>(neosnippet_expand_target)
+imap <C-k> <Plug>(coc-snippets-expand-jump)
 
 " ポップアップ補完メニューが表示されているときは次の候補を選択
 inoremap <silent><expr> <Tab> <SID>tab_key ()
@@ -526,14 +638,16 @@ inoremap <silent><expr> <Space> <SID>space_key ()
 
 " インデントを考慮した<Home>
 nnoremap <silent><expr> 0 <SID>home_key ()
-xnoremap <silent><expr> 0 <SID>home_key ()
 nnoremap <silent><expr> <Home> <SID>home_key ()
+
+xnoremap <silent><expr> 0 <SID>home_key ()
 vnoremap <silent><expr> <Home> <SID>home_key ()
 inoremap <silent><expr> <Home> '<C-o>' . <SID>home_key ()
 
 " コメントアウト
 " Linuxでは<C-/>は<C-_>で設定しないといけないらしいが<C-/>で動くのだが…？
-nnoremap <C-/> I// <Esc>
+"nnoremap <C-/> I// <Esc>
+nmap <C-_> gcc
 
 " CocList
 nnoremap <silent> <Space><Space> :<C-u>CocList<CR>
@@ -546,6 +660,8 @@ nmap <silent> gi <Plug>(coc-diagnostic-next)
 
 " show documentation
 nnoremap <silent> <F1> :<C-u>call <SID>show_documentation ()<CR>
+
+nmap qf <Plug>(coc-fix-current)
 
 "inoremap <F5> <C-o>:<C-u>echo <SID>cursor_line_string()<CR>
 
@@ -568,51 +684,139 @@ nnoremap <silent> <F1> :<C-u>call <SID>show_documentation ()<CR>
 " *******************************
 
 " カーソル位置の文字
-function! s:cursor_char ()
+function! s:cursor_char () abort
   return matchstr (getline ('.') , '.' , col ('.') - 1)
 endfunction
 
 " 現在の行にある文字列をカーソル位置の前と後に分割して返す
 " 前はカーソル直下の文字を含まない
 " 後はカーソル直下の文字を含む
-function! s:cursor_line_string ()
-  let l:str = getline ('.')
-  let l:pos = col ('.') - 1
-  if l:pos == 0
-    return ['', l:str]
-  else
-    return [l:str[:l:pos - 1], l:str[l:pos:]]
-  endif
+function! s:getline () abort
+  let str = getline ('.')
+  let pos = col ('.') - 1
+  let prev = strpart (str, 0, pos)
+  let post = strpart (str, pos)
+  return [prev, post]
 endfunction
+
+function! s:starts_with (str, x) abort
+  return a:str =~# '\v^\V' . a:x
+endfunction
+
+function! s:ends_with (str, x) abort
+  return a:str =~# '\V' . a:x . '\v$'
+endfunction
+
+let s:pairs = {
+  \ '(': ')',
+  \ '{': '}',
+  \ '[': ']',
+  \ '<': '>',
+  \ '''': '''',
+  \ '"': '"',
+  \ '`': '`',
+  \ }
 
 " 空の括弧の中にいるかどうか
-function! s:is_in_empty_parentheses (pre, post)
-  return  (a:pre =~# '($' && a:post =~# '^)')   ||
-        \ (a:pre =~# '[$' && a:post =~# '^]')   ||
-        \ (a:pre =~# '{$' && a:post =~# '^}')   ||
-        \ (a:pre =~# '<$' && a:post =~# '^>')
+function! s:is_in_empty_parentheses (prev, post) abort
+  for [begin, end] in items (s:pairs)
+    " skip quotation
+    if begin ==# end
+      continue
+    endif
+
+    if s:ends_with (a:prev, begin) && s:starts_with (a:post, end)
+      return 1
+    endif
+  endfor
+
+  return 0
 endfunction
 
-function! s:is_in_empty_quotation (pre, post)
-  return  (a:pre =~# '"$' && a:post =~# '^"')   ||
-        \ (a:pre =~# '''$' && a:post =~# '^''') ||
-        \ (a:pre =~# '`$' && a:post =~# '^`')
+function! s:is_in_empty_quotation (prev, post) abort
+  for [begin, end] in items (s:pairs)
+    " skip parentheses
+    if begin !=# end
+      continue
+    endif
+
+    if s:ends_with (a:prev, begin) && s:starts_with (a:post, end)
+      return 1
+    endif
+  endfor
+
+  return 0
 endfunction
 
-function! s:is_in_empty_parenthes_with_space (pre, post)
-  return  (a:pre =~# '( $' && a:post =~# '^ )')   ||
-        \ (a:pre =~# '[ $' && a:post =~# '^ ]')   ||
-        \ (a:pre =~# '{ $' && a:post =~# '^ }')   ||
-        \ (a:pre =~# '< $' && a:post =~# '^ >')
+function! s:is_in_empty_parenthes_with_space (prev, post) abort
+  for [begin, end] in items (s:pairs)
+    " skip quotation
+    if begin ==# end
+      continue
+    endif
+
+    if s:ends_with (a:prev, begin . ' ') && s:starts_with (a:post, ' ' . end)
+      return 1
+    endif
+  endfor
+
+  return 0
 endfunction
 
 " 括弧閉じるを補完するべきかどうか
 " カーソル位置が末尾、
 " カーソル位置に空白、
 " カーソル位置に括弧閉じるがある場合は補完するべき。(連続で入力したときに補完されないのはおかしいので)
-function! s:should_complete_end_parenthesis (pre, post)
-  return a:post =~# '^$\|^\s\|^[)}\]>]'
+function! s:should_complete_end_parenthesis (prev, post) abort
+  if a:post =~# '\v^$|^\s'
+    return 1
+  endif
+
+  for [begin, end] in items (s:pairs)
+    " skip quotation
+    if begin ==# end
+      continue
+    endif
+
+    if s:starts_with (a:post, end)
+      return 1
+    endif
+  endfor
+
+  return 0
 endfunction
+
+" quotation閉じるを補完すべきかどうか
+" カーソルの前後が空白か括弧のときは補完するべき（と思う）
+function! s:should_complete_quotation (prev, post) abort
+  let left_flag = 0
+  let right_flag = 0
+
+  if a:prev =~# '\v^$|\s$'
+    let left_flag = 1
+  endif
+
+  if a:post =~# '\v^$|^\s'
+    let right_flag = 1
+  endif
+
+  for [begin, end] in items (s:pairs)
+    if begin ==# end
+      continue
+    endif
+
+    if s:ends_with (a:prev, begin)
+      let left_flag = 1
+    endif
+
+    if s:starts_with (a:post, end)
+      let right_flag = 1
+    endif
+  endfor
+
+  return left_flag == 1 && right_flag == 1
+endfunction
+
 
 """"""""""""""""""""""""""""""""
 " Key
@@ -620,9 +824,9 @@ endfunction
 
 " 括弧開始
 " カーソル直下がキーワードでなかった場合、閉じ括弧を補完
-function! s:begin_parenthesis (begin, end)
-  let [l:pre, l:post] = s:cursor_line_string ()
-  if s:should_complete_end_parenthesis (l:pre, l:post)
+function! s:begin_parenthesis (begin, end) abort
+  let [prev, post] = s:getline ()
+  if s:should_complete_end_parenthesis (prev, post)
     let b:parentheses_completion_stack += 1
     return a:begin . a:end . "\<Left>"
   else
@@ -633,9 +837,9 @@ endfunction
 " 括弧閉じ
 " 補完スタックがある時、単に右に移動
 " それ以外は括弧閉じる
-function! s:end_parenthesis (begin, end)
-  let [l:pre, l:post] = s:cursor_line_string ()
-  if b:parentheses_completion_stack > 0 && l:post =~# '^' . a:end
+function! s:end_parenthesis (begin, end) abort
+  let [prev, post] = s:getline ()
+  if b:parentheses_completion_stack > 0 && post =~# '^' . a:end
     let b:parentheses_completion_stack -= 1
     return "\<Right>"
   else
@@ -649,13 +853,13 @@ endfunction
 " カーソル位置に同じ文字がある場合は<Right>
 " 直前と直後に空白や括弧しかない場合は補完する
 " それ以外は補完しない
-function! s:quotation_key (key)
-  let [l:pre, l:post] = s:cursor_line_string ()
-  if &filetype ==# 'vim' && l:pre ==# '' && a:key ==# '"'
+function! s:quotation_key (key) abort
+  let [prev, post] = s:getline ()
+  if &filetype ==# 'vim' && prev =~# '^\s*$' && a:key ==# '"'
     return a:key
-  elseif l:post =~# '^' . a:key
+  elseif post =~# '^' . a:key
     return "\<Right>"
-  elseif l:pre =~# '^$\|\s$\|[({[<]$' && l:post =~# '^$\|^\s\|^[)}\]>]'
+  elseif s:should_complete_quotation (prev, post)
     return a:key . a:key . "\<Left>"
   else
     return a:key
@@ -666,16 +870,23 @@ endfunction
 " Tab
 " キーワードなら補完開始
 " スラッシュならファイル名補完開始
+" 空行ならインデント調整
 " それ以外はTab
-function! s:tab_key ()
+function! s:tab_key () abort
   if pumvisible ()
     return "\<C-n>"
   else
-    let [l:pre, l:post] = s:cursor_line_string ()
-    if l:pre =~# '\k$'
-      return "\<C-n>"
-    elseif l:pre =~# '/$'
+    let [prev, post] = s:getline ()
+    if prev =~# '\k$'
+      if dein#tap ('coc.nvim')
+        return coc#refresh ()
+      else
+        return "\<C-n>"
+      endif
+    elseif prev =~# '/$
       return "\<C-x>\<C-f>"
+    elseif prev ==# '' && post ==# ''
+      return "\<C-f>\<C-d>\<C-t>"
     else
       return "\<Tab>"
     endif
@@ -687,18 +898,18 @@ endfunction
 " カーソルが{}の間ならいい感じに改行
 " カーソルが``の間なら```にして改行
 " それ以外は改行
-function! s:cr_key ()
+function! s:cr_key () abort
   if pumvisible ()
     return "\<C-y>"
   else
-    let [l:pre, l:post] = s:cursor_line_string ()
-    if s:is_in_empty_parentheses (l:pre, l:post)
+    let [prev, post] = s:getline ()
+    if s:is_in_empty_parentheses (prev, post)
       return "\<CR>\<Up>\<End>\<CR>"
-    elseif l:pre =~# '"$' && l:post =~# '^"'
-      return "\"\"\<CR>\"\"\<Up>\<End>\<CR>"
-    elseif l:pre =~# '''$' && l:post =~# '^'''
+    elseif prev =~# '''$' && post =~# '^'''
       return "''\<CR>''\<Up>\<End>\<CR>"
-    elseif l:pre =~# '`$' && l:post =~# '^`'
+    elseif prev =~# '"$' && post =~# '^"'
+      return "\"\"\<CR>\"\"\<Up>\<End>\<CR>"
+    elseif prev =~# '`$' && post =~# '^`'
       return "``\<CR>``\<Up>\<End>\<CR>"
     else
       return "\<CR>"
@@ -708,9 +919,9 @@ endfunction
 
 
 " Backspace Key
-function! s:backspace_key ()
-  let [l:pre, l:post] = s:cursor_line_string ()
-  if s:is_in_empty_parentheses (l:pre, l:post) || s:is_in_empty_quotation (l:pre, l:post) || s:is_in_empty_parenthes_with_space (l:pre, l:post)
+function! s:backspace_key () abort
+  let [prev, post] = s:getline ()
+  if s:is_in_empty_parentheses (prev, post) || s:is_in_empty_quotation (prev, post) || s:is_in_empty_parenthes_with_space (prev, post)
     return "\<BS>\<Del>"
   else
     return "\<BS>"
@@ -718,9 +929,9 @@ function! s:backspace_key ()
 endfunction
 
 " Delete Key
-function! s:delete_key ()
-  let [l:pre, l:post] = s:cursor_line_string ()
-  if s:is_in_empty_parentheses (l:pre, l:post) || s:is_in_empty_quotation (l:pre, l:post) || s:is_in_empty_parenthes_with_space (l:pre, l:post)
+function! s:delete_key () abort
+  let [prev, post] = s:getline ()
+  if s:is_in_empty_parentheses (prev, post) || s:is_in_empty_quotation (prev, post) || s:is_in_empty_parenthes_with_space (prev, post)
     return "\<BS>\<Del>"
   else
     return "\<Del>"
@@ -732,11 +943,11 @@ endfunction
 " 直前が*または\だった場合、そのまま/
 " < だった場合、/を入力した後オムニ補完開始
 " それ以外: /を入力した後ファイル名補完開始
-function! s:slash_key ()
-  let [l:pre, l:post] = s:cursor_line_string ()
-  if l:pre =~# '[/*\\]$'
+function! s:slash_key () abort
+  let [prev, post] = s:getline ()
+  if prev =~# '[/*\\]$'
     return "/"
-  elseif l:pre =~# '<$'
+  elseif prev =~# '<$'
     if &omnifunc != ''
       return "/\<C-x>\<C-o>"
     else
@@ -750,9 +961,9 @@ endfunction
 
 " Home Key
 " インデントを考慮した<Home>
-function! s:home_key ()
-  let [l:pre, l:post] = s:cursor_line_string ()
-  if l:pre =~# '^\s\+$'
+function! s:home_key () abort
+  let [prev, post] = s:getline ()
+  if prev =~# '^\s\+$'
     return "0"
   else
     return "^"
@@ -761,10 +972,10 @@ endfunction
 
 
 " Space Key
-" インデントを考慮した<Home>
-function! s:space_key ()
-  let [l:pre, l:post] = s:cursor_line_string ()
-  if s:is_in_empty_parentheses (l:pre, l:post)
+" カーソルが空括弧の間にあった場合に2個挿入
+function! s:space_key () abort
+  let [prev, post] = s:getline ()
+  if s:is_in_empty_parentheses (prev, post)
     return "\<Space>\<Space>\<Left>"
   else
     return "\<Space>"
@@ -777,7 +988,7 @@ endfunction
 """"""""""""""""""""""""""""""""
 
 " show vim help
-function! s:show_documentation ()
+function! s:show_documentation () abort
   if (index (['vim', 'help'], &filetype) >= 0)
     execute 'help ' . expand ('<cword>')
   else
@@ -787,8 +998,8 @@ endfunction
 
 
 " 自動保存
-function! s:auto_save_if_possible ()
-  if &modified && &filetype != 'gitcommit' && filewritable (expand ('%'))
+function! s:auto_save () abort
+  if &modified && !&readonly && &filetype != 'gitcommit' && filewritable (expand ('%'))
     write
   endif
 endfunction

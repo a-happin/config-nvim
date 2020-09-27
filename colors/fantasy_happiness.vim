@@ -96,5 +96,8 @@ if &background ==# 'dark'
 
   " Todo
   highlight Todo ctermfg=16 ctermbg=229 cterm=none
+
+  " Conceal
+  highlight Conceal ctermfg=111 ctermbg=none cterm=none
 endif
 
