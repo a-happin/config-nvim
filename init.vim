@@ -883,7 +883,7 @@ function! s:tab_key () abort
       else
         return "\<C-n>"
       endif
-    elseif prev =~# '/$
+    elseif prev =~# '/$'
       return "\<C-x>\<C-f>"
     elseif prev ==# '' && post ==# ''
       return "\<C-f>\<C-d>\<C-t>"
