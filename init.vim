@@ -76,7 +76,7 @@ if dein#load_state (s:dein_directory)
 endif
 
 " auto install new plugin
-if has ('vim_starting') && dein#check_install ()
+if dein#check_install ()
   call dein#install ()
 endif
 
@@ -184,7 +184,7 @@ let g:NERDTreeDirArrowExpandable = '▸'
 let g:NERDTreeDirArrowCollapsible = '▾'
 let g:NERDTreeShowHidden = 1
 "nnoremap <C-e> :<C-u>NERDTreeToggle<CR>
-nnoremap <C-e> :<C-u>call <SID>toggle_netrw ()<CR>
+nnoremap <silent> <C-e> :<C-u>call <SID>toggle_netrw ()<CR>
 
 " *******************************
 " **  autocmd
@@ -232,12 +232,16 @@ augroup END
 
 augroup terminal-fix
   autocmd!
-  autocmd TermOpen term://* setlocal nonumber
+  autocmd TermOpen term://* setlocal nonumber bufhidden=wipe
   autocmd TermOpen,TermEnter,WinEnter term://* startinsert
   autocmd TermClose term://* stopinsert
   autocmd TermClose term://*/zsh bw!
 augroup END
 
+augroup netrw-fix
+  autocmd!
+  autocmd FileType netrw setlocal bufhidden=wipe
+augroup END
 
 tnoremap <Esc><Esc> <C-\><C-n>
 tnoremap <LeftRelease> <Nop>
@@ -885,7 +889,7 @@ function! s:tab_key () abort
       endif
     elseif prev =~# '/$'
       return "\<C-x>\<C-f>"
-    elseif prev ==# '' && post ==# ''
+    elseif prev ==# '' && post ==# '' && &cinkeys =~# '\V!^F' && (&cindent || &indentexpr !=# '')
       return "\<C-f>\<C-d>\<C-t>"
     else
       return "\<Tab>"
