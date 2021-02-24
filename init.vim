@@ -133,6 +133,7 @@ let g:coc_global_extensions = [
       \ 'coc-vimlsp',
       \ 'coc-json',
       \ 'coc-tsserver',
+      \ 'coc-deno',
       \]
 
 augroup coc-config
@@ -209,10 +210,10 @@ augroup dictionary
   autocmd FileType cpp setlocal dictionary+=~/.config/nvim/dictionary/cpp.dict
 augroup END
 
-augroup auto-save
-  autocmd!
-  autocmd TextChanged,InsertLeave * silent call s:auto_save ()
-augroup END
+"augroup auto-save
+"  autocmd!
+"  autocmd TextChanged,InsertLeave * silent call s:auto_save ()
+"augroup END
 
 augroup file-reload
   autocmd!
@@ -236,6 +237,7 @@ augroup terminal-fix
   autocmd TermOpen,TermEnter,WinEnter term://* startinsert
   autocmd TermClose term://* stopinsert
   autocmd TermClose term://*/zsh bw!
+  autocmd TermClose term://*/fish bw!
 augroup END
 
 augroup netrw-fix
@@ -243,10 +245,54 @@ augroup netrw-fix
   autocmd FileType netrw setlocal bufhidden=wipe
 augroup END
 
-tnoremap <Esc><Esc> <C-\><C-n>
+augroup fish-fix
+  autocmd!
+  autocmd BufNewFile,BufReadPost *.fish setlocal filetype=sh
+augroup END
+
+"tnoremap <Esc><Esc> <C-\><C-n>
 tnoremap <LeftRelease> <Nop>
+tnoremap <C-w> <C-\><C-n><C-w>
 command! -nargs=* Hterminal botright split new | resize 15 | terminal <args>
 command! -nargs=* Vterminal botright vertical new | terminal <args>
+
+command! -nargs=* W w <args>
+cnoreabbrev w!! w !sudo -S tee > /dev/null %
+
+augroup encrypt
+  autocmd!
+  autocmd! BufReadPre *.encrypted setlocal buftype=acwrite
+  autocmd! BufReadCmd *.encrypted call DecryptRead()
+  autocmd! BufWriteCmd *.encrypted call EncryptWrite()
+augroup END
+
+function! DecryptRead() abort
+  try
+    call inputsave()
+    redraw | let password = inputsecret('enter aes-256-cbc decryption password: ')
+  finally
+    call inputrestore()
+    redraw
+  endtry
+  execute '%!openssl aes-256-cbc -d -k ' . password . ' -in ' . bufname()
+endfunction
+
+function! EncryptWrite() abort
+  try
+    call inputsave()
+    redraw | let password = inputsecret('enter aes-256-cbc encryption password: ')
+    redraw | let password2 = inputsecret('Verifying - enter aes-256-cbc encryption password: ')
+  finally
+    call inputrestore()
+    redraw
+  endtry
+  if password ==# password2
+    execute 'write !openssl aes-256-cbc -e -k ' . password . ' -out ' . bufname()
+    set nomodified
+  else
+    echomsg 'password doesn''t match'
+  endif
+endfunction
 
 " *******************************
 " **  set
@@ -276,6 +322,9 @@ set nobackup
 " アクセス修飾子のインデントを深くしない
 " templateのインデントを深くしない
 set cinoptions+=:0,g0,t0
+
+" share clipboard
+set clipboard=unnamedplus
 
 " 補完の種類
 set complete=.,w,b,u,k,s,i,d,t
@@ -309,10 +358,8 @@ set confirm
 set copyindent
 
 " show cursor column
-"set cursorcolumn
-
 " show cursor line
-set nocursorline
+set nocursorcolumn nocursorline
 
 " dictionary
 "set dictionary=
@@ -334,7 +381,7 @@ set incsearch
 
 " キーワード (\k)
 " ハイフン(-)もキーワードとみなす
-set iskeyword+=-
+set iskeyword& iskeyword+=-,@-@
 
 " show status line
 " if 2, always
@@ -355,7 +402,7 @@ set matchpairs=(:),{:},[:],<:>
 
 " enable mouse
 " 'a' means enable in all mode
-set mouse=a
+set mouse=ar
 
 " show line number
 set number
@@ -380,7 +427,7 @@ set pumblend=0
 " show position of cursor
 set ruler
 
-set shell=zsh
+set shell=fish
 
 " <>などでインデント調整時にshiftwidthの倍数に丸める
 set shiftround
@@ -396,7 +443,7 @@ set shortmess& shortmess+=c
 set showcmd
 
 " 現在の入力モードを表示しない(プラグインでstatuslineに表示するようにしたので)
-set noshowmode
+set showmode
 
 " 括弧入力時に対応する括弧に一瞬ジャンプしない（うざい）
 set noshowmatch
@@ -404,7 +451,7 @@ set noshowmatch
 " 大文字で検索した時は大文字と小文字を区別する
 set smartcase
 
-" かしこい
+" 行頭のTabはshiftwidthに、それ以外はtabstopまたはsofttabstopに従う
 set smartindent
 
 " かしこい
@@ -415,7 +462,7 @@ set smarttab
 " Backspaceでsofttabstopの幅だけspacesを削除する
 " if 0, disable this feature
 " if negative, the same as shiftwidth
-set softtabstop=-1
+set softtabstop=0
 
 " enable spell check
 "set spell
@@ -427,7 +474,7 @@ set spelllang=en,cjk
 "set splitbelow
 
 " 分割した時に右側に新しいウインドウを表示
-"set splitright
+set splitright
 
 " format of status line
 "set statusline=%F\ %m%r%h%w%=[FORMAT=%{&ff}]\ %y\ (%3v,%3l)\ [%2p%%]
@@ -498,6 +545,7 @@ endtry
 
 " 保存せずに破棄の誤爆防止
 nnoremap ZQ <Nop>
+nnoremap ZZ <Nop>
 
 " 中ボタンによる貼り付けを無効
 nnoremap <MiddleMouse> <Nop>
@@ -508,7 +556,7 @@ vnoremap <MiddleMouse> <Nop>
 inoremap <C-c> <Nop>
 
 " 全部閉じて終了
-nnoremap <silent> <C-q> :<C-u>qall<CR>
+nnoremap <silent> <C-q> :<C-u>confirm qall<CR>
 
 " ビジュアルモードでCtrl-Aで全選択
 vnoremap <C-a> gg0oG$
@@ -517,13 +565,16 @@ vnoremap <C-a> gg0oG$
 xnoremap all gg0oG$
 onoremap all :<C-u>normal! vgg0oG$<CR>
 
+xnoremap il g_o0o
+onoremap il <Cmd>normal! v_o$h<CR>
+
 "xnoremap <Space> gE<Space>f<Space>ow<BS>F<Space>
 
 " 選択中にCtrl-Cでクリップボードにコピー
 vnoremap <C-c> "+y
 
 " Shift-Tabでインデントを1つ減らす
-nnoremap <S-Tab> <<
+"nnoremap <S-Tab> <<
 
 " Shift-Yで行末までヤンク
 nnoremap Y y$
@@ -550,14 +601,28 @@ nnoremap <Space>a a<Space><Esc>
 nnoremap <Space>o o<Space><C-u><Esc>
 nnoremap <Space>O O<Space><C-u><Esc>
 
+nnoremap <Space>h ^
+nnoremap <Space>l $
+nnoremap <Space><Tab> <Cmd>tabnew<CR>
+nnoremap <Tab> gt
+nnoremap <S-Tab> gT
+nnoremap <CR> :
+
+
 " 入れ替え
 "nnoremap ; :
 "nnoremap : ;
 "xnoremap ; :
 "xnoremap : ;
 
+nnoremap # #*N
+
+nnoremap <silent> <leader>1 :<C-u>setlocal cursorline! cursorcolumn!<CR>
+nnoremap <silent> <leader>2 :<C-u>setlocal relativenumber!<CR>
+nnoremap <silent> <leader>0 :<C-u>setlocal paste!<CR>
+
 " 閉じる
-nnoremap <silent> <Space>q :<C-u>bw<CR>
+nnoremap <silent> <Space>q :<C-u>q<CR>
 
 " 保存
 nnoremap <Space>w :<C-u>w<CR>
@@ -603,7 +668,7 @@ xmap s <Plug>(surround)
 "imap <C-k> <Plug>(neosnippet_expand_or_jump)
 "smap <C-k> <Plug>(neosnippet_expand_or_jump)
 "xmap <C-k> <Plug>(neosnippet_expand_target)
-imap <C-k> <Plug>(coc-snippets-expand-jump)
+"imap <C-k> <Plug>(coc-snippets-expand-jump)
 
 " ポップアップ補完メニューが表示されているときは次の候補を選択
 inoremap <silent><expr> <Tab> <SID>tab_key ()
@@ -1008,3 +1073,32 @@ function! s:auto_save () abort
   endif
 endfunction
 
+function! s:auto_mkdir(dir, force) abort
+  if empty(a:dir) || a:dir =~# '^\w\+://' || isdirectory(a:dir) || a:dir =~# '^suda:'
+      return
+  endif
+  if !a:force
+    echohl Question
+    call inputsave()
+    try
+      let result = input(
+            \ printf('"%s" does not exist. Create? [y/N]', a:dir),
+            \ '',
+            \)
+      if empty(result)
+        echohl WarningMsg
+        echo 'Canceled'
+        return
+      endif
+    finally
+      call inputrestore()
+      echohl None
+    endtry
+  endif
+  call mkdir(a:dir, 'p')
+endfunction
+
+augroup auto-mkdir
+  autocmd!
+  autocmd BufWritePre * call s:auto_mkdir(expand('<afile>:p:h'), v:cmdbang)
+augroup END
