@@ -211,6 +211,7 @@ augroup load-template
   autocmd!
   autocmd BufNewFile *.cpp  execute '0r ' . s:nvim_directory . '/template/.cpp'
   autocmd BufNewFile *.html execute '0r ' . s:nvim_directory . '/template/.html'
+  autocmd BufNewFile pack.mcmeta execute '0r ' . s:nvim_directory . '/template/pack.mcmeta'
 augroup END
 
 augroup fix-terminal
