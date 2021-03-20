@@ -1,6 +1,6 @@
 scriptencoding utf-8
 
-function! s:auto_mkdir(dir, force) abort
+function! auto_mkdir#mkdir(dir, force) abort
   if empty(a:dir) || a:dir =~# '^\w\+://' || isdirectory(a:dir) || a:dir =~# '^suda:'
       return
   endif
@@ -24,8 +24,3 @@ function! s:auto_mkdir(dir, force) abort
   endif
   call mkdir(a:dir, 'p')
 endfunction
-
-augroup auto_mkdir
-  autocmd!
-  autocmd BufWritePre * call s:auto_mkdir(expand('<afile>:p:h'), v:cmdbang)
-augroup END

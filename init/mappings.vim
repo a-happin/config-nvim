@@ -58,20 +58,15 @@ nnoremap f<CR> $
 
 nnoremap # #*N
 
-" Better <C-n>/<C-p> in Command
-cnoremap <C-p> <Up>
-cnoremap <C-n> <Down>
-cnoremap <Up> <C-p>
-cnoremap <Down> <C-n>
 
-nnoremap <F5> <Cmd>echo 'hi'<CR>
+nnoremap <F5> <Cmd>call system('deno run --allow-all ./generator.ts > fantasy.vim')\|Reload<CR>
 
 " --------------------------------
 "  機能追加
 " --------------------------------
 
 " 全部閉じて終了
-nnoremap <silent> <C-q> :<C-u>confirm qall<CR>
+nnoremap <silent> <C-q> <Cmd>confirm qall<CR>
 
 
 " Shift-Tabでインデントを1つ減らす
@@ -81,8 +76,8 @@ nnoremap <silent> <C-q> :<C-u>confirm qall<CR>
 nnoremap <Tab> gt
 nnoremap <S-Tab> gT
 
-" 検索ハイライト消してファイルチェックして再描画！
-nnoremap <C-l> :<C-u>nohlsearch \| checktime<CR><C-l>
+" ファイルチェックして再描画！
+nnoremap <C-l> <Cmd>checktime<CR><C-l>
 
 
 " --------------------------------
@@ -106,14 +101,20 @@ nnoremap <Space>l $
 nnoremap <Space><Tab> <Cmd>tabnew<CR>
 
 " 閉じる
-nnoremap <silent> <Space>q :<C-u>q<CR>
+nnoremap <silent> <Space>q <Cmd>q<CR>
 
 " 保存
-nnoremap <Space>w :<C-u>w<CR>
+nnoremap <Space>w <Cmd>w<CR>
 nnoremap <Space>0 $
 
 " open config file
-nnoremap <Space>, :<C-u>edit $MYVIMRC<CR>
+nnoremap <Space>, <Cmd>edit $MYVIMRC<CR>
+
+" toggle option
+nnoremap <silent> <Space>1 <Cmd>setlocal cursorline! cursorcolumn!<CR>
+nnoremap <silent> <Space>2 <Cmd>setlocal relativenumber!<CR>
+nnoremap <silent> <Space>3 <Cmd>setlocal spell!<CR>
+" nnoremap <silent> <Space>0 <Cmd>setlocal paste!<CR>
 
 
 " --------------------------------
@@ -125,7 +126,7 @@ vnoremap <C-a> gg0oG$
 
 " allテキストオブジェクト ファイル全体
 xnoremap all gg0oG$
-onoremap all :<C-u>normal! vgg0oG$<CR>
+onoremap all <Cmd>normal! vgg0oG$<CR>
 
 xnoremap il g_o0o
 onoremap il <Cmd>normal! v_o$h<CR>
@@ -140,14 +141,7 @@ onoremap il <Cmd>normal! v_o$h<CR>
 " Linuxでは<C-/>は<C-_>で設定しないといけないらしい
 nmap <C-_> gcc
 imap <C-_> <C-o>gcc
-
-
-" --------------------------------
-"  toggle option
-" --------------------------------
-nnoremap <silent> <leader>1 :<C-u>setlocal cursorline! cursorcolumn!<CR>
-nnoremap <silent> <leader>2 :<C-u>setlocal relativenumber!<CR>
-nnoremap <silent> <leader>0 :<C-u>setlocal paste!<CR>
+xmap <C-_> gc
 
 
 " --------------------------------
@@ -168,7 +162,7 @@ vnoremap <C-c> "+y
 "  netrw
 " --------------------------------
 "nnoremap <C-e> :<C-u>NERDTreeToggle<CR>
-nnoremap <silent> <C-e> :<C-u>call <SID>toggle_netrw ()<CR>
+nnoremap <silent> <C-e> <Cmd>call <SID>toggle_netrw ()<CR>
 
 
 " --------------------------------
@@ -187,7 +181,7 @@ nmap <silent> gi <Plug>(coc-diagnostic-next)
 nmap qf <Plug>(coc-fix-current)
 
 " show documentation
-nnoremap <silent> <F1> :<C-u>call <SID>show_documentation ()<CR>
+nnoremap <silent> <F1> <Cmd>call <SID>show_documentation ()<CR>
 
 
 " --------------------------------
@@ -237,7 +231,6 @@ inoremap <silent><expr> <S-Tab> pumvisible () ? '<C-p>' : '<C-d>'
 
 " ポップアップ補完メニューが表示されているときは確定
 inoremap <silent><expr> <CR> <SID>cr_key ()
-cnoremap <silent><expr> <CR> pumvisible () ? '<End>' : '<CR>'
 
 " 括弧の対応の補完
 inoremap <silent><expr> ( <SID>begin_parenthesis ('(',')')
@@ -271,6 +264,22 @@ vnoremap <silent><expr> <Home> <SID>home_key ()
 inoremap <silent><expr> <Home> '<C-o>' . <SID>home_key ()
 
 " --------------------------------
+"  command mode
+" --------------------------------
+
+" 補完メニューが表示されているときの挙動修正
+cnoremap <silent><expr> <CR> pumvisible () ? '<End>' : '<CR>'
+cnoremap <silent><expr> <Left> pumvisible () ? '<End>' : '<Left>'
+cnoremap <silent><expr> <Right> pumvisible () ? '<End>' : '<Right>'
+
+" Better <C-n>/<C-p> in Command
+cnoremap <C-p> <Up>
+cnoremap <C-n> <Down>
+cnoremap <Up> <C-p>
+cnoremap <Down> <C-n>
+
+
+" --------------------------------
 "  Terminal
 " --------------------------------
 
@@ -278,7 +287,6 @@ inoremap <silent><expr> <Home> '<C-o>' . <SID>home_key ()
 " クリックでterminal windowを選択時にnormalモードに戻らないようにする
 tnoremap <LeftRelease> <Nop>
 tnoremap <C-w> <C-\><C-n><C-w>
-
 
 " *******************************
 " **  function!
@@ -590,6 +598,24 @@ function! s:show_documentation () abort
     execute 'help ' . expand ('<cword>')
   else
     call CocAction ('doHover')
+  endif
+endfunction
+
+function! s:toggle_netrw () abort
+  let exists_netrw = 0
+  for i in range (1, bufnr ('$'))
+    if getbufvar (i, '&filetype') == 'netrw'
+      execute 'bwipeout ' . i
+      let exists_netrw = 1
+      break
+    endif
+  endfor
+  if !exists_netrw
+    topleft vertical new
+    vertical resize 30
+    Explore
+    setlocal winfixwidth
+    wincmd p
   endif
 endfunction
 

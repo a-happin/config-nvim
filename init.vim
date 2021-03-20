@@ -41,6 +41,9 @@ if dein#load_state (s:dein_directory)
   " requires
   call dein#add (s:dein_repo_directory)
 
+  " colorscheme
+  " call dein#add ('cocopon/iceberg.vim')
+
   " LSP client, completion
   call dein#add ('neoclide/coc.nvim', {'merged': 0, 'rev': 'release'})
 
@@ -69,7 +72,10 @@ if dein#load_state (s:dein_directory)
   call dein#add ('gorodinskiy/vim-coloresque')
 
   " toggle comment
-  call dein#add('tpope/vim-commentary')
+  call dein#add ('tpope/vim-commentary')
+
+  " syntax
+  " call dein#add ('sheerun/vim-polyglot')
 
   call dein#end ()
   call dein#save_state ()
@@ -123,7 +129,12 @@ if dein#tap ('lightline.vim')
         \   },
         \   'component_function': {
         \     'cocstatus': 'coc#status'
-        \   }
+        \   },
+        \   'tab': {
+        \     'active': ['filename', 'modified'],
+        \     'inactive': ['filename', 'modified']
+        \   },
+        \   'enable': { 'tabline': 0 }
         \ }
 endif
 
@@ -154,24 +165,8 @@ let g:netrw_altv = 1
 let g:netrw_winsize = 15
 " 直前に開いていた位置で開く
 let g:netrw_browse_split = 4
-function! s:toggle_netrw () abort
-  let exists_netrw = 0
-  for i in range (1, bufnr ('$'))
-    if getbufvar (i, '&filetype') == 'netrw'
-      execute 'bwipeout ' . i
-      let exists_netrw = 1
-      break
-    endif
-  endfor
-  if !exists_netrw
-    topleft vertical new
-    vertical resize 30
-    Explore
-    setlocal winfixwidth
-    wincmd p
-  endif
-endfunction
 
+" jsonのconcealを無効にする
 let g:vim_json_conceal = 0
 
 " *******************************
@@ -197,10 +192,15 @@ augroup dictionary
   autocmd FileType cpp setlocal dictionary+=~/.config/nvim/dictionary/cpp.dict
 augroup END
 
-"augroup auto-save
+"augroup auto_save
 "  autocmd!
-"  autocmd TextChanged,InsertLeave * silent call s:auto_save ()
+"  autocmd TextChanged,InsertLeave * silent call auto_save#save ()
 "augroup END
+
+augroup auto_mkdir
+  autocmd!
+  autocmd BufWritePre * call auto_mkdir#mkdir(expand('<afile>:p:h'), v:cmdbang)
+augroup END
 
 augroup reload-file
   autocmd!
@@ -211,6 +211,7 @@ augroup load-template
   autocmd!
   autocmd BufNewFile *.cpp  execute '0r ' . s:nvim_directory . '/template/.cpp'
   autocmd BufNewFile *.html execute '0r ' . s:nvim_directory . '/template/.html'
+  autocmd BufNewFile *.sh execute '0r' . s:nvim_directory . '/template/.sh'
   autocmd BufNewFile pack.mcmeta execute '0r ' . s:nvim_directory . '/template/pack.mcmeta'
 augroup END
 
@@ -231,6 +232,7 @@ augroup END
 augroup fix-filetype
   autocmd!
   autocmd BufNewFile,BufReadPost *.fish setlocal filetype=sh
+  autocmd BufNewFile,BufReadPost *.mcmeta setlocal filetype=json
 augroup END
 
 " *******************************
@@ -260,7 +262,7 @@ set nobackup
 " Labelのインデントを深くしない
 " アクセス修飾子のインデントを深くしない
 " templateのインデントを深くしない
-set cinoptions+=:0,g0,t0
+set cinoptions& cinoptions+=:0,g0,t0,+0
 
 " share clipboard
 if has('unnamedplus')
@@ -321,8 +323,10 @@ set inccommand=split
 set incsearch
 
 " キーワード (\k)
+" @はアルファベットを表す
 " ハイフン(-)もキーワードとみなす
-set iskeyword& iskeyword+=-,@-@
+" @自体を追加したい場合は@-@とする(範囲指定)
+set iskeyword& iskeyword+=-
 
 " show status line
 " if 2, always
@@ -356,10 +360,13 @@ set number
 set preserveindent
 
 " 補完メニューの高さを制限する
-" if 0, limit.
+" if 0, スペースいっぱい使う
 set pumheight=25
 
-" Enables pseudo-transparency for the |popup-menu|.
+" Enables pseudo-transparency for the |popup-menu|. Valid values are in
+" the range of 0 for fully opaque popupmenu (disabled) to 100 for fully
+" transparent background. Values between 0-30 are typically most useful.
+" 半透明描画ができないターミナルだと全部透過されて残念な見た目になる…。
 set pumblend=0
 
 " 相対行番号
@@ -368,6 +375,7 @@ set pumblend=0
 " show position of cursor
 set ruler
 
+" 環境変数SHELLから自動で設定されるので設定の必要なし
 " set shell=fish
 
 " <>などでインデント調整時にshiftwidthの倍数に丸める
@@ -418,10 +426,12 @@ set spelllang=en,cjk
 set splitright
 
 " format of status line
-"set statusline=%F\ %m%r%h%w%=[FORMAT=%{&ff}]\ %y\ (%3v,%3l)\ [%2p%%]
+set statusline=%F\ %m%r%h%w%=[FORMAT=%{&ff}]\ %y\ (%3v,%3l)\ [%2p%%]
 
 " do not create swap file
 set noswapfile
+
+set tabline=%!tabline#make()
 
 " tab width
 set tabstop=8
@@ -472,21 +482,13 @@ if exists ("syntax_on")
 endif
 
 " colorschemeの設定
-" note: colorscheme defaultはbackgroundを書き換えるクソなのでdefaultがいい場合は何も読み込まないことを推奨
+" note: colorscheme defaultはbackgroundを書き換えるのでdefaultがいい場合は何も読み込まないことを推奨
 " 読み込み失敗してもエラーを吐かないように例外処理
 try
-  colorscheme fantasy_happiness
+  colorscheme pink-theme
 catch /:E185:/
 endtry
 
-" *******************************
-" **  function!
-" *******************************
-
-" 自動保存
-function! s:auto_save () abort
-  if &modified && !&readonly && &filetype != 'gitcommit' && filewritable (expand ('%'))
-    write
-  endif
-endfunction
+" highlight Normal ctermbg=none
+" highlight CursorLineNr ctermfg=15
 
