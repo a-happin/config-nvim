@@ -77,6 +77,9 @@ if dein#load_state (s:dein_directory)
   " syntax
   " call dein#add ('sheerun/vim-polyglot')
 
+  " fzf
+  call dein#add ('junegunn/fzf.vim')
+
   call dein#end ()
   call dein#save_state ()
 endif
