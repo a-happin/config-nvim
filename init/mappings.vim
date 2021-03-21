@@ -30,6 +30,10 @@ vnoremap <MiddleMouse> <Nop>
 " （InsertLeaveが呼ばれないので内部状態がおかしくなる）
 inoremap <C-c> <Nop>
 
+" disable Ex mode
+nnoremap Q <Nop>
+nnoremap gQ <Nop>
+
 
 " --------------------------------
 "  挙動修正
@@ -59,7 +63,7 @@ nnoremap f<CR> $
 nnoremap # #*N
 
 
-nnoremap <F5> <Cmd>call system('deno run --allow-all ./generator.ts > fantasy.vim')\|Reload<CR>
+" nnoremap <F5> <Cmd>call system('deno run --allow-all ./generator.ts > fantasy.vim')\|Reload<CR>
 
 " --------------------------------
 "  機能追加
@@ -79,14 +83,35 @@ nnoremap <S-Tab> gT
 " ファイルチェックして再描画！
 nnoremap <C-l> <Cmd>checktime<CR><C-l>
 
+" Shift-Yで行末までヤンク
+nnoremap Y y$
+
+" 選択範囲をヤンクした文字列で上書き時にレジスタを汚さない
+xnoremap p pgvy
+
+" 選択中にCtrl-Cでクリップボードにコピー
+vnoremap <C-c> "+y
+
+" 移動系
+" 戻る
+nnoremap <M-Left> <C-o>
+" 進む
+nnoremap <M-Right> <C-i>
+
+" 入れ替え
+nnoremap <expr> <M-Up> '<Cmd>move .-' . (v:count > 0 ? v:count + 1 : 2) . '<CR>'
+nnoremap <expr> <M-Down> '<Cmd>move .+' . (v:count > 0 ? v:count : 1) . '<CR>'
+" 範囲選択での入れ替え
+xnoremap <M-Up> :move '<-2<CR>gv
+xnoremap <M-Down> :move '>+1<CR>gv
 
 " --------------------------------
 "  <Space>
 " --------------------------------
 
 " Paste from clipboard
-nnoremap <Space>p "+]p
-nnoremap <Space>P "+]P
+nnoremap <Space>p "+p
+nnoremap <Space>P "+P
 
 " 空白1文字挿入
 nnoremap <Space>i i<Space><Esc>
@@ -105,6 +130,8 @@ nnoremap <silent> <Space>q <Cmd>q<CR>
 
 " 保存
 nnoremap <Space>w <Cmd>w<CR>
+
+" 行末
 nnoremap <Space>0 $
 
 " open config file
@@ -145,20 +172,6 @@ xmap <C-_> gc
 
 
 " --------------------------------
-"  yank系
-" --------------------------------
-
-" Shift-Yで行末までヤンク
-nnoremap Y y$
-
-" 選択範囲をヤンクした文字列で上書き時にレジスタを汚さない
-xnoremap p pgvy
-
-" 選択中にCtrl-Cでクリップボードにコピー
-vnoremap <C-c> "+y
-
-
-" --------------------------------
 "  netrw
 " --------------------------------
 "nnoremap <C-e> :<C-u>NERDTreeToggle<CR>
@@ -176,12 +189,15 @@ nmap <silent> gd <Plug>(coc-definition)
 " nnoremap <silent> <Space><Space> :<C-u>CocList<CR>
 
 " 次のdiagnostic(エラー、警告)
-nmap <silent> gi <Plug>(coc-diagnostic-next)
+nmap <silent> [e <Plug>(coc-diagnostic-prev)
+nmap <silent> ]e <Plug>(coc-diagnostic-next)
 
 nmap qf <Plug>(coc-fix-current)
 
 " show documentation
 nnoremap <silent> <F1> <Cmd>call <SID>show_documentation ()<CR>
+" rename identifier
+nmap <F2> <Plug>(coc-rename)
 
 
 " --------------------------------
@@ -189,6 +205,7 @@ nnoremap <silent> <F1> <Cmd>call <SID>show_documentation ()<CR>
 " --------------------------------
 
 " 選択モードで選択中の範囲を囲む
+xmap s <Plug>(surround)
 " ()
 xnoremap sb "zc(<C-r><C-o>z)<Esc>
 xnoremap <Plug>(surround)( "zc(<C-r><C-o>z)<Esc>
@@ -209,7 +226,27 @@ xnoremap <Plug>(surround)' "zc'<C-r><C-o>z'<Esc>
 " ``
 xnoremap <Plug>(surround)` "zc`<C-r><C-o>z`<Esc>
 
-xmap s <Plug>(surround)
+" 囲んでいる括弧を削除する
+nmap ds <Plug>(dsurround)
+" ()
+nnoremap <Plug>(dsurround)b "zcib<BS><Del><C-r><C-o>z<Esc>
+nnoremap <Plug>(dsurround)( "zci(<BS><Del><C-r><C-o>z<Esc>
+nmap <Plug>(dsurround)) <Plug>(dsurround)(
+" {}
+nnoremap <Plug>(dsurround){ "zci{<BS><Del><C-r><C-o>z<Esc>
+nmap <Plug>(dsurround)} <Plug>(dsurround){
+" []
+nnoremap <Plug>(dsurround)[ "zci[<BS><Del><C-r><C-o>z<Esc>
+nmap <Plug>(dsurround)] <Plug>(dsurround)[
+" <>
+nnoremap <Plug>(dsurround)< "zci<<BS><Del><C-r><C-o>z<Esc>
+nmap <Plug>(dsurround)> <Plug>(dsurround)<
+" ""
+nnoremap <Plug>(dsurround)" "zci"<BS><Del><C-r><C-o>z<Esc>
+" ''
+nnoremap <Plug>(dsurround)' "zci'<BS><Del><C-r><C-o>z<Esc>
+" ``
+nnoremap <Plug>(dsurround)` "zci`<BS><Del><C-r><C-o>z<Esc>
 
 
 " --------------------------------
@@ -263,12 +300,13 @@ xnoremap <silent><expr> 0 <SID>home_key ()
 vnoremap <silent><expr> <Home> <SID>home_key ()
 inoremap <silent><expr> <Home> '<C-o>' . <SID>home_key ()
 
+
 " --------------------------------
 "  command mode
 " --------------------------------
 
 " 補完メニューが表示されているときの挙動修正
-cnoremap <silent><expr> <CR> pumvisible () ? '<End>' : '<CR>'
+" cnoremap <silent><expr> <CR> pumvisible () ? '<End>' : '<CR>'
 cnoremap <silent><expr> <Left> pumvisible () ? '<End>' : '<Left>'
 cnoremap <silent><expr> <Right> pumvisible () ? '<End>' : '<Right>'
 

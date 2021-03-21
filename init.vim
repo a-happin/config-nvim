@@ -45,7 +45,7 @@ if dein#load_state (s:dein_directory)
   " call dein#add ('cocopon/iceberg.vim')
 
   " LSP client, completion
-  call dein#add ('neoclide/coc.nvim', {'merged': 0, 'rev': 'release'})
+  call dein#add ('neoclide/coc.nvim', {'merged': 0, 'rev': 'release', 'hook_add': 'call hook_add#coc#hook_add()'})
 
   " completion
   "call dein#add ('Shougo/deoplete.nvim')
@@ -63,7 +63,9 @@ if dein#load_state (s:dein_directory)
   "call dein#add ('w0rp/ale')
 
   " customize statusline
-  call dein#add ('itchyny/lightline.vim')
+  call dein#add ('itchyny/lightline.vim', {'hook_add': 'call hook_add#lightline#hook_add()'})
+  " cocの情報をlightlineに表示するためのコンポーネント提供, autocmd追加
+  call dein#add ('josa42/vim-lightline-coc')
 
   " visible indent
   "call dein#add ('Yggdroot/indentLine')
@@ -96,7 +98,7 @@ endif
 runtime! init/*.vim
 
 filetype plugin indent on
-syntax on
+syntax enable
 
 " *******************************
 " **  コマンド
@@ -111,50 +113,12 @@ command! -nargs=* W w <args>
 " root権限に昇格して書き込み
 cnoreabbrev w!! w !sudo -S tee > /dev/null %
 
+" カーソル位置のsyntax hightlight group
+command! CurrentSyntax echo synIDattr(synID(line('.'), col('.'), 1), 'name')
+
 " *******************************
-" **  plugin settings
+" **  settings
 " *******************************
-
-if dein#tap ('lightline.vim')
-  let g:lightline = {
-        \   'colorscheme': 'wombat',
-        \   'active': {
-        \     'left': [
-        \       [ 'mode', 'paste' ],
-        \       [ 'readonly', 'absolutepath', 'modified' ]
-        \     ],
-        \     'right': [
-        \       [ 'lineinfo' ],
-        \       [ 'percent' ],
-        \       [ 'fileformat', 'fileencoding', 'filetype' ],
-        \       [ 'cocstatus' ]
-        \     ]
-        \   },
-        \   'component_function': {
-        \     'cocstatus': 'coc#status'
-        \   },
-        \   'tab': {
-        \     'active': ['filename', 'modified'],
-        \     'inactive': ['filename', 'modified']
-        \   },
-        \   'enable': { 'tabline': 0 }
-        \ }
-endif
-
-if dein#tap('coc.nvim')
-  let g:coc_global_extensions = [
-        \ 'coc-lists',
-        \ 'coc-vimlsp',
-        \ 'coc-json',
-        \ 'coc-tsserver',
-        \ 'coc-deno',
-        \]
-
-  augroup coc-config
-    autocmd!
-    autocmd CursorHold * silent call CocActionAsync ('highlight')
-  augroup END
-endif
 
 " 上のヘルプコメントを隠す
 let g:netrw_banner = 0
@@ -262,9 +226,10 @@ set backspace=indent,eol,start
 set nobackup
 
 " Cのインデントオプション
-" Labelのインデントを深くしない
-" アクセス修飾子のインデントを深くしない
-" templateのインデントを深くしない
+" :0 Labelのインデントを深くしない
+" g0 アクセス修飾子のインデントを深くしない
+" t0 templateのインデントを深くしない
+" +0 namespace内、クラス内のtemplateのインデントを深くしない
 set cinoptions& cinoptions+=:0,g0,t0,+0
 
 " share clipboard
@@ -312,6 +277,9 @@ set nocursorcolumn nocursorline
 
 " replace Tab with spaces
 set expandtab
+
+" 行コメントを自動で継続しない
+set formatoptions& formatoptions-=ro
 
 " :bでバッファを切り替えるときに保存しなくてもよくなる
 set hidden
@@ -440,7 +408,7 @@ set tabline=%!tabline#make()
 set tabstop=8
 
 " CursorHoldの発動ラグ
-set updatetime=1000
+set updatetime=500
 
 " 移動キーなどで行をまたいで移動する
 " b: <BS>

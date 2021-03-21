@@ -18,7 +18,7 @@ if &background ==# 'dark'
   hi CursorColumn ctermbg=black guibg=black
   hi ColorColumn ctermbg=225 guibg=#ffd7ff
   hi CocHighlightText cterm=underline gui=underline
-  hi StatusLine cterm=bold ctermbg=225 ctermfg=black gui=bold guibg=#ffd7ff guifg=black
+  hi StatusLine cterm=bold ctermbg=yellow ctermfg=black gui=bold guibg=yellow guifg=black
   hi StatusLineNC cterm=NONE ctermbg=darkgray ctermfg=black gui=NONE guibg=darkgray guifg=black
   hi Question ctermbg=none ctermfg=225 guibg=none guifg=#ffd7ff
   hi ModeMsg cterm=bold ctermbg=none ctermfg=225 gui=bold guibg=none guifg=#ffd7ff
@@ -52,8 +52,8 @@ if &background ==# 'dark'
   hi SpecialKey cterm=NONE ctermfg=225 gui=NONE guifg=#ffd7ff
   hi NonText cterm=NONE ctermfg=225 gui=NONE guifg=#ffd7ff
   hi VertSplit cterm=NONE ctermbg=none ctermfg=darkgray gui=NONE guibg=none guifg=darkgray
-  hi IncSearch cterm=bold,reverse ctermbg=none ctermfg=225 gui=bold,reverse guibg=none guifg=#ffd7ff
-  hi Search cterm=bold,reverse ctermbg=none ctermfg=225 gui=bold,reverse guibg=none guifg=#ffd7ff
+  hi IncSearch cterm=bold,reverse ctermbg=none ctermfg=yellow gui=bold,reverse guibg=none guifg=yellow
+  hi Search cterm=bold,reverse ctermbg=none ctermfg=yellow gui=bold,reverse guibg=none guifg=yellow
   hi MatchParen ctermbg=white ctermfg=black guibg=white guifg=black
   hi Folded ctermbg=none ctermfg=225 guibg=none guifg=#ffd7ff
   hi FoldColumn ctermbg=none ctermfg=225 guibg=none guifg=#ffd7ff

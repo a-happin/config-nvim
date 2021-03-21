@@ -42,6 +42,7 @@ const pink = {cui: 225, gui: '#ffd7ff'}
 
 const accent_color = pink
 const accent_bg = black
+const sub_color = yellow
 const normal = white
 const normal_bg = none
 const cursorline_color = black
@@ -133,7 +134,7 @@ console.log (`if &background ==# 'dark'`)
 
 
   // ステータスライン
-  highlight ('StatusLine', {fg: black, bg: accent_color, attrs: ['bold']})
+  highlight ('StatusLine', {fg: black, bg: sub_color, attrs: ['bold']})
   // ステータスライン（非アクティブ）
   highlight ('StatusLineNC', {fg: black, bg: darkgray, attrs: ['NONE']})
   // プロンプトメッセージ
@@ -234,9 +235,9 @@ console.log (`if &background ==# 'dark'`)
 
   // 検索結果
   // インクリメンタル検索中かつ最初にマッチした場所
-  highlight ('IncSearch', {fg: accent_color, bg: none, attrs: ['bold', 'reverse']})
+  highlight ('IncSearch', {fg: sub_color, bg: none, attrs: ['bold', 'reverse']})
   // 上記以外
-  highlight ('Search', {fg: accent_color, bg: none, attrs: ['bold', 'reverse']})
+  highlight ('Search', {fg: sub_color, bg: none, attrs: ['bold', 'reverse']})
 
 
   // 対応する括弧
