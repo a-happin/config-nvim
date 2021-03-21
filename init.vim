@@ -198,8 +198,8 @@ augroup END
 
 augroup fix-filetype
   autocmd!
-  autocmd BufNewFile,BufReadPost *.fish setlocal filetype=sh
-  autocmd BufNewFile,BufReadPost *.mcmeta setlocal filetype=json
+  autocmd BufNewFile,BufReadPost *.fish setfiletype sh
+  autocmd BufNewFile,BufReadPost *.mcmeta setfiletype json
 augroup END
 
 " *******************************
