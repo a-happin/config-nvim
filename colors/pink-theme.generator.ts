@@ -196,10 +196,10 @@ console.log (`if &background ==# 'dark'`)
   highlight ('PreProc', {fg: statement_color})
 
   // 型
-  highlight ('Type', {fg: type_color})
+  highlight ('Type', {fg: type_color, attrs: ['bold']})
 
   // 特殊記号? vimの<CR>や行継続\が対応していた
-  highlight ('Special', {fg: special_color})
+  highlight ('Special', {fg: special_color, attrs: ['bold']})
 
   // エラー　確認できず
   highlight ('Error', {fg: black, bg: error_red, attrs: ['bold']})

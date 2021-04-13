@@ -41,8 +41,8 @@ if &background ==# 'dark'
   hi Label ctermfg=magenta guifg=magenta
   hi Operator cterm=bold ctermfg=magenta gui=bold guifg=magenta
   hi PreProc ctermfg=magenta guifg=magenta
-  hi Type ctermfg=yellow guifg=yellow
-  hi Special ctermfg=225 guifg=#ffd7ff
+  hi Type cterm=bold ctermfg=yellow gui=bold guifg=yellow
+  hi Special cterm=bold ctermfg=225 gui=bold guifg=#ffd7ff
   hi Error cterm=bold ctermbg=red ctermfg=black gui=bold guibg=red guifg=black
   hi Todo cterm=bold ctermbg=226 ctermfg=black gui=bold guibg=#ffff00 guifg=black
   hi Conceal ctermfg=225 guifg=#ffd7ff

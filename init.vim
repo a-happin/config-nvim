@@ -202,6 +202,11 @@ augroup fix-filetype
   autocmd BufNewFile,BufReadPost *.mcmeta setfiletype json
 augroup END
 
+augroup fix-formatoptions
+  autocmd!
+  autocmd FileType * setlocal formatoptions-=ro
+augroup END
+
 " *******************************
 " **  set
 " *******************************
